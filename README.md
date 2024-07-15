@@ -13,7 +13,7 @@ SciCode is a challenging benchmark designed to evaluate the capabilities of lang
 ## Dataset Creation
 SciCode sources challenging and realistic research-level coding problems across 6 natural science disciplines, covering a total of 16 subfields. Scicode mainly focuses on 1. Numerical methods 2.Simulation of systems 3. Scientific calculation. These are the tasks we believe require intense scientific knowledge and reasoning to optimally test LM’s science capability.
 
-## 🏆 Mini-Leaderboard
+## 🏆 Leaderboard
 | Model                     | Subproblem | Main Problem |
 |---------------------------|------------|--------------|
 | Claude3.5-Sonnet          | **26**         | **4.6**          |
