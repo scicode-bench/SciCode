@@ -144,6 +144,8 @@ from scicode.parse.parse import process_hdf5_to_tuple
 
     with open(f'{test_result_dir}/{model_name}.json', 'w', encoding='utf-8') as f:
         json.dump(correct_dict, f, indent=4)
+    
+    Path(tmp_dir).rmdir()
 
 
 def delete_all_files_in_folder(folder_path):
