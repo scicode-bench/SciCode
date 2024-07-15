@@ -3,6 +3,7 @@ keys.cfg
 **/test_result/**
 **/output/**
 **/eval_results/**
+eval/logs/**
 
 
 # -------
