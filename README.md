@@ -14,6 +14,7 @@ SciCode is a challenging benchmark designed to evaluate the capabilities of lang
 SciCode sources challenging and realistic research-level coding problems across 6 natural science disciplines, covering a total of 16 subfields. Scicode mainly focuses on 1. Numerical methods 2.Simulation of systems 3. Scientific calculation. These are the tasks we believe require intense scientific knowledge and reasoning to optimally test LM’s science capability.
 
 ## 🏆 Leaderboard
+
 | Model                     | Subproblem | Main Problem |
 |---------------------------|------------|--------------|
 | Claude3.5-Sonnet          | **26**         | **4.6**          |
@@ -27,8 +28,13 @@ SciCode sources challenging and realistic research-level coding problems across 
 | Mixtral-8x22B-Instruct    | 16.3       | 0            |
 | Llama-3-70B-Chat          | 14.6       | 0            |
 
+## Instructions to evaluate a new model
 
-
+1. Clone this repository `git clone git@github.com:scicode-bench/SciCode.git`
+2. Install the `scicode` package with `pip install -e .`
+3. Download the [numeric test results](https://drive.google.com/drive/folders/1W5GZW6_bdiDAiipuFMqdUhvUaHIj6-pR?usp=drive_link) and save them as `./eval/data/test_data.h5`
+4. Run `eval/scripts/gencode_json.py` to generate new model outputs (see the [`eval/scripts` readme](eval/scripts/)) for more information
+5. Run `eval/scripts/test_generated_code.py` to evaluate the unittests
 
 ## Contact
 - Minyang Tian: mtian8@illinois.edu
