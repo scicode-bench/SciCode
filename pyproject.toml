@@ -29,6 +29,8 @@ dependencies = [
     "anthropic",
     "config",
     "rich",
+    "pytest",
+    "pytest-cov",
     # requirements for execution
     "numpy",
     "scipy",
