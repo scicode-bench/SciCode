@@ -6,6 +6,15 @@ To run the script, go to the root of this repo and use the following command fro
 python evaluation/scripts/gencode_json.py [options]
 ```
 
+Your first need to set up your API keys. For this, create a `keys.cfg` file at the root of the repository
+and add keys as follows:
+
+```
+OPENAI_KEY = 'your_api_key'
+ANTHROPIC_KEY = 'your_api_key'
+GOOGLE_KEY = 'your_api_key' 
+```
+
 For example, to create  model results with `gpt-4o` and the default settings, run 
 
 ```bash
