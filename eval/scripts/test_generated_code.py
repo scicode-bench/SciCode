@@ -1,50 +1,41 @@
 from pathlib import Path
-import os
 import json
 import subprocess
 import time
+import shutil
 import numpy as np
+import argparse
 
 from scicode.parse.parse import read_from_jsonl
 
 
-prob_num = 65
-step_num = 288
-
-logs_dir = 'eval/logs'
-code_dir = 'eval_results / generated_code'
-test_result_dir = 'test_result'
+PROB_NUM = 80
+STEP_NUM = 288
 
 
-if not os.path.exists(logs_dir):
-    os.makedirs(logs_dir)
+def test_code(model_name, code_dir, log_dir, output_dir, jsonl_path):
 
-json_path = 'eval/data/problems_all.jsonl'
-json_dct = {}
-json_idx = {}
+    jsonl_data = read_from_jsonl(jsonl_path)
+    json_dct = {}
+    json_idx = {}
 
-jsonl_data = read_from_jsonl(json_path)
-for prob_data in jsonl_data:
-    json_dct[prob_data['problem_id']] = len(prob_data['sub_steps'])
-    json_idx[prob_data['problem_id']] = jsonl_data.index(prob_data)
-
-
-def test_code(model_name):
+    for prob_data in jsonl_data:
+        json_dct[prob_data['problem_id']] = len(prob_data['sub_steps'])
+        json_idx[prob_data['problem_id']] = jsonl_data.index(prob_data)
     start_time = time.time()
 
-    code_dir_ = f'{code_dir}/{model_name}'
-    tmp_dir = f'tmp_{start_time}'
+    code_dir_ = Path(code_dir, model_name)
+    tmp_dir = Path(f'tmp_{start_time}')
 
-    if not os.path.exists(tmp_dir):
-        os.makedirs(tmp_dir)
+    tmp_dir.mkdir(parents=True, exist_ok=True)
 
-    for root, _, files in os.walk(code_dir_):
-        for file in files:
-            file_name = Path(file).stem
+    for file_path in code_dir_.iterdir():
+        if file_path.is_file():
+            file_name = file_path.stem
             file_id = file_name.split(".")[0]
             file_step = file_name.split(".")[1]
 
-            code_content = Path(root, file).read_text(encoding='utf-8')
+            code_content = file_path.read_text(encoding='utf-8')
             json_content = jsonl_data[json_idx[file_id]]
             step_id = json_content["sub_steps"][int(file_step) - 1]["step_number"]
             test_lst = json_content["sub_steps"][int(file_step) - 1]["test_cases"]
@@ -75,34 +66,32 @@ from scicode.parse.parse import process_hdf5_to_tuple
             print(f"Runtime error while running script {script_path}: {e}")
             return 2
 
-    correct_prob = np.zeros(prob_num)
-    tot_prob = np.zeros(prob_num)
+    correct_prob = np.zeros(PROB_NUM)
+    tot_prob = np.zeros(PROB_NUM)
     correct_step = []
     correct_dict = {}
 
-    for i in range(prob_num):
+    for i in range(PROB_NUM):
         correct_dict[f'{i+1}'] = []
 
-    for root, _, files in os.walk(tmp_dir):
-        for file in files:
-            script_path = Path(root, file)
-            func_id = str(file.split('.py')[0])
-            prob_id = str(func_id.split('.')[0])
+    for file_path in tmp_dir.iterdir():
+        if file_path.is_file():
+            func_id = file_path.stem
+            prob_id = func_id.split('.')[0]
             print(f'Testing function {func_id} ...')
             tot_prob[int(prob_id) - 1] += 1
-            logs_dir_ = f'{logs_dir}/{model_name}'
-            if not os.path.exists(logs_dir_):
-                os.makedirs(logs_dir_)
-            logs_file = os.path.join(logs_dir_, f'{Path(file).stem}.txt')
-            if os.path.exists(logs_file):
+            logs_dir_ = Path(log_dir, model_name)
+            logs_dir_.mkdir(parents=True, exist_ok=True)
+            logs_file = Path(logs_dir_, f'{file_path.stem}.txt')
+            if logs_file.exists():
                 with open(logs_file, 'r') as f:
                     content = f.read().splitlines()
                     if content[0] == 'pass':
                         correct_prob[int(prob_id) - 1] += 1
                         correct_step.append(func_id)
-                        correct_dict[str(prob_id)].append(func_id)
+                        correct_dict[prob_id].append(func_id)
                 continue
-            ret = run_script(script_path)
+            ret = run_script(file_path)
             if ret == 0:
                 correct_prob[int(prob_id) - 1] += 1
                 correct_step.append(func_id)
@@ -118,30 +107,71 @@ from scicode.parse.parse import process_hdf5_to_tuple
 
     test_time = time.time() - start_time
 
-    correct_prob_num = sum(1 for i in range(prob_num) if
+    correct_prob_num = sum(1 for i in range(PROB_NUM) if
                            correct_prob[i] == tot_prob[i]
                            and tot_prob[i] != 0)
 
-    print(f'correct problems: {correct_prob_num}/{prob_num}')
-    print(f'correct steps: {len(correct_step)}/{step_num}')
+    print(f'correct problems: {correct_prob_num}/{PROB_NUM - 15}')
+    print(f'correct steps: {len(correct_step)}/{STEP_NUM}')
 
-    if not os.path.exists(test_result_dir):
-        os.makedirs(test_result_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    with open(f'{test_result_dir}/{model_name}.txt', 'w') as f:
-        f.write(f'correct problems(include dev set): {correct_prob_num}/{prob_num}\n')
-        f.write(f'correct steps(include dev set): {len(correct_step)}/{step_num}\n\n')
+    with open(f'{output_dir}/{model_name}.txt', 'w') as f:
+        f.write(f'correct problems(include dev set): {correct_prob_num}/{PROB_NUM - 15}\n')
+        f.write(f'correct steps(include dev set): {len(correct_step)}/{STEP_NUM}\n\n')
         f.write(f'duration: {test_time} seconds\n')
         f.write('\ncorrect problems: ')
-        f.write(f'\n\n{[i + 1 for i in range(prob_num) if correct_prob[i] == tot_prob[i] and tot_prob[i] != 0]}\n')
+        f.write(f'\n\n{[i + 1 for i in range(PROB_NUM) if correct_prob[i] == tot_prob[i] and tot_prob[i] != 0]}\n')
 
-    with open(f'{test_result_dir}/{model_name}.json', 'w', encoding='utf-8') as f:
+    with open(f'{output_dir}/{model_name}.json', 'w', encoding='utf-8') as f:
         json.dump(correct_dict, f, indent=4)
     
-    Path(tmp_dir).rmdir()
+    shutil.rmtree(tmp_dir)
 
 
+def get_cli() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+    )
+    parser.add_argument(
+        "--model", type=str, default="gpt-4o", help="Model name"
+    )
+    parser.add_argument(
+        "--code-dir",
+        type=Path,
+        default=Path("eval_results", "generated_code"),
+        help="Code directory",
+    )
+    parser.add_argument(
+        "--log-dir",
+        type=Path,
+        default=Path("logs"),
+        help="Log directory",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("eval_results"),
+        help="Eval results directory",
+    )
+    parser.add_argument(
+        "--jsonl-path",
+        type=Path,
+        default=Path("eval", "data", "problems_all.jsonl"),
+        help="Path to jsonl file",
+    )
+    return parser
 
 
-model = 'gpt-4o'
-test_code(model)
+def main(model: str,
+         code_dir: Path,
+         log_dir: Path,
+         output_dir: Path,
+         jsonl_path: Path
+) -> None:
+    test_code(model, code_dir, log_dir, output_dir, jsonl_path)
+
+
+if __name__ == "__main__":
+    args = get_cli().parse_args()
+    main(**vars(args))
