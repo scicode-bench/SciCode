@@ -8,9 +8,6 @@ import h5py
 import scipy
 import numpy as np
 from sympy import Symbol
-from pathlib import Path
-from textwrap import dedent
-from typing import Any
 
 OrderedContent = list[tuple[str, str]]
 
