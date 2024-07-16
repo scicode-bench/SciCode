@@ -117,8 +117,8 @@ from scicode.parse.parse import process_hdf5_to_tuple
     output_dir.mkdir(parents=True, exist_ok=True)
 
     with open(f'{output_dir}/{model_name}.txt', 'w') as f:
-        f.write(f'correct problems(include dev set): {correct_prob_num}/{PROB_NUM - 15}\n')
-        f.write(f'correct steps(include dev set): {len(correct_step)}/{STEP_NUM}\n\n')
+        f.write(f'correct problems: {correct_prob_num}/{PROB_NUM - 15}\n')
+        f.write(f'correct steps: {len(correct_step)}/{STEP_NUM}\n\n')
         f.write(f'duration: {test_time} seconds\n')
         f.write('\ncorrect problems: ')
         f.write(f'\n\n{[i + 1 for i in range(PROB_NUM) if correct_prob[i] == tot_prob[i] and tot_prob[i] != 0]}\n')
