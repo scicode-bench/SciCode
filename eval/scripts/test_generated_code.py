@@ -8,12 +8,13 @@ import numpy as np
 from scicode.parse.parse import read_from_jsonl
 
 
-prob_num = 80
-step_num = 338
+prob_num = 65
+step_num = 288
 
 logs_dir = 'eval/logs'
-dev_lst = [1, 3, 4, 6, 7, 10, 19, 29, 38, 44, 47, 49, 51, 70, 78]
-step_num_dev = 50
+code_dir = 'eval_results / generated_code'
+test_result_dir = 'test_result'
+
 
 if not os.path.exists(logs_dir):
     os.makedirs(logs_dir)
@@ -31,13 +32,13 @@ for prob_data in jsonl_data:
 def test_code(model_name):
     start_time = time.time()
 
-    code_dir = f'eval_results/generated_code/{model_name}'
+    code_dir_ = f'{code_dir}/{model_name}'
     tmp_dir = f'tmp_{start_time}'
 
     if not os.path.exists(tmp_dir):
         os.makedirs(tmp_dir)
 
-    for root, _, files in os.walk(code_dir):
+    for root, _, files in os.walk(code_dir_):
         for file in files:
             file_name = Path(file).stem
             file_id = file_name.split(".")[0]
@@ -120,15 +121,9 @@ from scicode.parse.parse import process_hdf5_to_tuple
     correct_prob_num = sum(1 for i in range(prob_num) if
                            correct_prob[i] == tot_prob[i]
                            and tot_prob[i] != 0)
-    correct_prob_num_dev = sum(1 for i in range(prob_num) if
-                               correct_prob[i] == tot_prob[i] and
-                               tot_prob[i] != 0 and
-                               (i + 1) not in dev_lst)
 
-    correct_step_dev = [i for i in correct_step if int(i.split('.')[0]) not in dev_lst]
-
-    print(f'correct problems(include dev set): {correct_prob_num}/{prob_num}')
-    print(f'correct steps(include dev set): {len(correct_step)}/{step_num}')
+    print(f'correct problems: {correct_prob_num}/{prob_num}')
+    print(f'correct steps: {len(correct_step)}/{step_num}')
 
     if not os.path.exists(test_result_dir):
         os.makedirs(test_result_dir)
@@ -136,8 +131,6 @@ from scicode.parse.parse import process_hdf5_to_tuple
     with open(f'{test_result_dir}/{model_name}.txt', 'w') as f:
         f.write(f'correct problems(include dev set): {correct_prob_num}/{prob_num}\n')
         f.write(f'correct steps(include dev set): {len(correct_step)}/{step_num}\n\n')
-        f.write(f'correct problems(exclude dev set): {correct_prob_num_dev}/{prob_num - len(dev_lst)}\n')
-        f.write(f'correct steps(exclude dev set): {len(correct_step_dev)}/{step_num - step_num_dev}\n\n')
         f.write(f'duration: {test_time} seconds\n')
         f.write('\ncorrect problems: ')
         f.write(f'\n\n{[i + 1 for i in range(prob_num) if correct_prob[i] == tot_prob[i] and tot_prob[i] != 0]}\n')
@@ -148,25 +141,7 @@ from scicode.parse.parse import process_hdf5_to_tuple
     Path(tmp_dir).rmdir()
 
 
-def delete_all_files_in_folder(folder_path):
-    try:
-        for filename in os.listdir(folder_path):
-            file_path = os.path.join(folder_path, filename)
-            if os.path.isfile(file_path):
-                os.unlink(file_path)
-            elif os.path.isdir(file_path):
-                delete_all_files_in_folder(file_path)
-                os.rmdir(file_path)
-        print(f"All files in {folder_path} have been deleted.")
-    except Exception as e:
-        print(f"Error: {e}")
 
 
-test_result_dir = 'test_result'
-models = ['gpt-4o', 'claude-3-5-sonnet-20240620', 'gpt-4-turbo-2024-04-09',
-          'claude-3-sonnet-20240229', 'claude-3-opus-20240229', 'gemini-1.5-pro']
-llm_code = True
-bgs = [0, 1, 3]
-for m in models:
-    for bg in bgs:
-        test_code(m)
+model = 'gpt-4o'
+test_code(model)
