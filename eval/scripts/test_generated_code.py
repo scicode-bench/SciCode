@@ -10,10 +10,12 @@ from scicode.parse.parse import read_from_jsonl
 
 
 PROB_NUM = 80
+DEV_PROB_NUM = 15
 STEP_NUM = 288
+DEV_STEP_NUM = 50
 
 
-def test_code(model_name, code_dir, log_dir, output_dir, jsonl_path):
+def test_code(model_name, code_dir, log_dir, output_dir, jsonl_path, dev_set=False):
 
     jsonl_data = read_from_jsonl(jsonl_path)
     json_dct = {}
@@ -111,14 +113,14 @@ from scicode.parse.parse import process_hdf5_to_tuple
                            correct_prob[i] == tot_prob[i]
                            and tot_prob[i] != 0)
 
-    print(f'correct problems: {correct_prob_num}/{PROB_NUM - 15}')
-    print(f'correct steps: {len(correct_step)}/{STEP_NUM}')
+    print(f'correct problems: {correct_prob_num}/{DEV_PROB_NUM if dev_set else PROB_NUM - DEV_PROB_NUM}')
+    print(f'correct steps: {len(correct_step)}/{DEV_STEP_NUM if dev_set else STEP_NUM}')
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
     with open(f'{output_dir}/{model_name}.txt', 'w') as f:
-        f.write(f'correct problems: {correct_prob_num}/{PROB_NUM - 15}\n')
-        f.write(f'correct steps: {len(correct_step)}/{STEP_NUM}\n\n')
+        f.write(f'correct problems: {correct_prob_num}/{DEV_PROB_NUM if dev_set else PROB_NUM - DEV_PROB_NUM}\n')
+        f.write(f'correct steps: {len(correct_step)}/{DEV_STEP_NUM if dev_set else STEP_NUM}\n\n')
         f.write(f'duration: {test_time} seconds\n')
         f.write('\ncorrect problems: ')
         f.write(f'\n\n{[i + 1 for i in range(PROB_NUM) if correct_prob[i] == tot_prob[i] and tot_prob[i] != 0]}\n')
@@ -160,6 +162,11 @@ def get_cli() -> argparse.ArgumentParser:
         default=Path("eval", "data", "problems_all.jsonl"),
         help="Path to jsonl file",
     )
+    parser.add_argument(
+        "--dev-set",
+        action='store_true',
+        help="Test dev set if enabled",
+    )
     return parser
 
 
@@ -167,9 +174,10 @@ def main(model: str,
          code_dir: Path,
          log_dir: Path,
          output_dir: Path,
-         jsonl_path: Path
+         jsonl_path: Path,
+         dev_set: bool
 ) -> None:
-    test_code(model, code_dir, log_dir, output_dir, jsonl_path)
+    test_code(model, code_dir, log_dir, output_dir, jsonl_path, dev_set)
 
 
 if __name__ == "__main__":
