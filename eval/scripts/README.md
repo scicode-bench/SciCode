@@ -1,11 +1,5 @@
  ## **Generate LLM code**
   
-To run the script, go to the root of this repo and use the following command from the repository root:
-
-```bash
-python evaluation/scripts/gencode_json.py [options]
-```
-
 Your first need to set up your API keys. For this, create a `keys.cfg` file at the root of the repository
 and add keys as follows:
 
@@ -15,10 +9,10 @@ ANTHROPIC_KEY = 'your_api_key'
 GOOGLE_KEY = 'your_api_key' 
 ```
 
-For example, to create  model results with `gpt-4o` and the default settings, run 
+For example, to create  model results with `gpt-4o` and the default settings, go to the root of this repo and run 
 
 ```bash
-python evaluation/scripts/gencode_json.py --model gpt-4o
+python eval/scripts/gencode_json.py --model gpt-4o
 ```
 
 ### Command-Line Arguments
@@ -36,7 +30,5 @@ Download the [numeric test results](https://drive.google.com/drive/folders/1W5GZ
 To run the script, go to the root of this repo and use the following command:
 
 ```bash
-python evaluation/scripts/test_generated_code.py
+python eval/scripts/test_generated_code.py --model "model_name"
 ```
-
-Please edit the `test_generated_code.py` source file to specify your model name, results directory and problem set (if not `problems_all.jsonl`).
