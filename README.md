@@ -40,3 +40,15 @@ SciCode sources challenging and realistic research-level coding problems across 
 - Minyang Tian: mtian8@illinois.edu
 - Eliu Huerta: elihu@anl.gov
 - Hao Peng: haopeng@illinois.edu
+
+## Citation
+```bibtex
+@misc{tian2024scicode,
+    title={SciCode: A Research Coding Benchmark Curated by Scientists},
+    author={Minyang Tian and Luyu Gao and Shizhuo Dylan Zhang and Xinan Chen and Cunwei Fan and Xuefei Guo and Roland Haas and Pan Ji and Kittithat Krongchon and Yao Li and Shengyan Liu and Di Luo and Yutao Ma and Hao Tong and Kha Trinh and Chenyu Tian and Zihan Wang and Bohao Wu and Yanyu Xiong and Shengzhu Yin and Minhui Zhu and Kilian Lieret and Yanxin Lu and Genglin Liu and Yufeng Du and Tianhua Tao and Ofir Press and Jamie Callan and Eliu Huerta and Hao Peng},
+    year={2024},
+    eprint={2407.13168},
+    archivePrefix={arXiv},
+    primaryClass={cs.AI}
+}
+```
