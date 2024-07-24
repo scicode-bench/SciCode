@@ -14,23 +14,27 @@ DEFAULT_PROMPT_TEMPLATE = Path("eval", "data", "background_comment_template.txt"
 
 class Gencode:
     def __init__(self, model: str, output_dir: Path,
-                 prompt_dir: Path, temperature: float):
+                 prompt_dir: Path, with_background: bool, temperature: float):
         self.model = model
         self.output_dir = output_dir
         self.prompt_dir = prompt_dir
+        self.with_background = with_background
         self.temperature = temperature
         self.previous_llm_code = []
 
-    def save_prompt_with_steps(self, prob_data: dict, prompt: str, num_steps: int, tot_steps: int) -> None:
-        output_dir = Path(self.prompt_dir, self.model)
+    def _get_background_dir(self):
+        return "with_background" if self.with_background else "without_background"
+
+    def save_prompt_with_steps(self, prob_data: dict, prompt: str, num_steps: int) -> None:
+        output_dir = Path(self.prompt_dir, Path(self.model).parts[-1], self._get_background_dir())
         output_dir.mkdir(parents=True, exist_ok=True)
         output_file_path = output_dir / f"{prob_data['problem_id']}.{num_steps}.txt"
         output_file_path.write_text(prompt, encoding="utf-8")
 
-    def save_response_with_steps(self, prob_data: dict, response: str, previous_code: str,
-                                 num_steps: int, model="gpt-4o",) -> None:
+    def save_response_with_steps(self, prob_data: dict, response: str,
+                                 previous_code: str, num_steps: int) -> None:
         output_dir = (
-                self.output_dir / model
+                self.output_dir / Path(self.model).parts[-1] / self._get_background_dir()
         )
         output_dir.mkdir(parents=True, exist_ok=True)
         prob_id = prob_data["problem_id"]
@@ -78,7 +82,7 @@ class Gencode:
                         raise Exception(f'Generating {prob_id} step {num_steps} ahead of step {prev_step + 1}.')
         prompt, previous_code = self.generate_prompt_with_steps(prob_data, num_steps, prompt_template)
         if save:
-            self.save_prompt_with_steps(prob_data, prompt, num_steps, tot_steps)
+            self.save_prompt_with_steps(prob_data, prompt, num_steps)
 
         model_kwargs = {}
         if "claude" in model:
@@ -94,7 +98,7 @@ class Gencode:
             model_fct = get_model_function(model, **model_kwargs)
             response_from_llm = model_fct(prompt)
             self.previous_llm_code[num_steps - 1] = extract_python_script(response_from_llm)
-            self.save_response_with_steps(prob_data, response_from_llm, previous_code, num_steps, model)
+            self.save_response_with_steps(prob_data, response_from_llm, previous_code, num_steps)
 
     @staticmethod
     def process_problem_code(prob_data: dict, num_steps: int) -> str:
@@ -109,11 +113,16 @@ class Gencode:
         next_step = []
         previous_code = []
         for i in range(num_steps - 1):
+            output_lines.append(problem_data["sub_steps"][i]["step_description_prompt"] + '\n' +
+                                problem_data["sub_steps"][i]["step_background"] if self.with_background
+                                else problem_data["sub_steps"][i]["step_description_prompt"])
             output_lines.append(self.previous_llm_code[i])
             previous_code.append(self.previous_llm_code[i])
             output_lines.append("------")
 
-        next_step.append(problem_data["sub_steps"][num_steps - 1]["step_description_prompt"])
+        next_step.append(problem_data["sub_steps"][num_steps - 1]["step_description_prompt"] + '\n' +
+                         problem_data["sub_steps"][num_steps - 1]["step_background"] if self.with_background
+                         else problem_data["sub_steps"][num_steps - 1]["step_description_prompt"])
         next_step.append(self.process_problem_code(problem_data, num_steps))
         output_str = "\n\n".join(output_lines[:-1])  # Remove the last "------"
         next_step_str = "\n\n".join(next_step)
@@ -161,6 +170,11 @@ def get_cli() -> argparse.ArgumentParser:
         help="Prompt directory",
     )
     parser.add_argument(
+        "--with-background",
+        action="store_true",
+        help="Include problem background if enabled",
+    )
+    parser.add_argument(
         "--temperature",
         type=float,
         default=0,
@@ -173,11 +187,12 @@ def main(model: str,
          output_dir: Path,
          input_path: Path,
          prompt_dir: Path,
+         with_background: bool,
          temperature: float
 ) -> None:
     gcode = Gencode(
         model=model, output_dir=output_dir,
-        prompt_dir=prompt_dir,  temperature=temperature
+        prompt_dir=prompt_dir,  with_background=with_background, temperature=temperature
     )
     data = read_from_jsonl(input_path)
     for problem in data:
