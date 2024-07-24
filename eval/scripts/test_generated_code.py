@@ -116,7 +116,7 @@ from scicode.parse.parse import process_hdf5_to_tuple
     print(f'correct problems: {correct_prob_num}/{DEV_PROB_NUM if dev_set else PROB_NUM - DEV_PROB_NUM}')
     print(f'correct steps: {len(correct_step)}/{DEV_STEP_NUM if dev_set else STEP_NUM}')
 
-    output_dir.mkdir(parents=True, exist_ok=True)
+    Path(f'{output_dir}/{Path(model_name)}').mkdir(parents=True, exist_ok=True)
 
     with open(f'{output_dir}/{model_name}.txt', 'w') as f:
         f.write(f'correct problems: {correct_prob_num}/{DEV_PROB_NUM if dev_set else PROB_NUM - DEV_PROB_NUM}\n')

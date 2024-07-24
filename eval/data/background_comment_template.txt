@@ -21,6 +21,8 @@ RESPONSE GUIDELINES:
 5. Ensure your response is in the format of ```python``` and includes the necessary background as a comment at the top.
 
 Example:
+```python
 # Background: [Here, insert the necessary scientific knowledge required for the next step.]
 
 [Insert the Python code here based on the provided function header and dependencies.]
+```

@@ -4,7 +4,14 @@ import anthropic
 import google.generativeai as genai
 import config
 import re
+import os
+import litellm
+from litellm.utils import validate_environment as litellm_validate_environment
+
 from scicode import keys_cfg_path
+from scicode.utils.log import get_logger
+
+logger = get_logger("models")
 
 
 def get_config():
@@ -12,6 +19,28 @@ def get_config():
         raise FileNotFoundError(f"Config file not found: {keys_cfg_path}")
     return config.Config(str(keys_cfg_path))
 
+def generate_litellm_response(prompt: str, *, model: str, **kwargs) -> str:
+    """Call the litellm api to generate a response"""
+    # litellm expects all keys as env variables
+    config = get_config()
+    for key, value in config.as_dict().items():
+        if key in os.environ and os.environ[key] != value:
+            logger.warning(f"Overwriting {key} from config with environment variable")
+        else:
+            os.environ[key] = value
+    # Let's validate that we have everythong for this model
+    env_validation = litellm_validate_environment(model)
+    if not env_validation.get("keys_in_environment") or env_validation.get("missing_keys", []):
+        msg = f"Environment validation for litellm failed for model {model}: {env_validation}"
+        raise ValueError(msg)
+    response = litellm.completion(
+        model=model,
+        messages = [
+            {"role": "user", "content": prompt},
+        ],
+        **kwargs,
+    )
+    return response.choices[0].message.content
 
 def generate_openai_response(prompt: str, *, model="gpt-4-turbo-2024-04-09",
                              temperature: float = 0) -> str:
@@ -87,7 +116,10 @@ def generate_google_response(prompt: str, *, model: str = "gemini-pro",
 
 def get_model_function(model: str, **kwargs):
     """Return the appropriate function to generate a response based on the model"""
-    if "gpt" in model:
+    if model.startswith("litellm/"):
+        model = model.removeprefix("litellm/")
+        fct = generate_litellm_response
+    elif "gpt" in model:
         fct = generate_openai_response
     elif "claude" in model:
         fct = generate_anthropic_response
@@ -107,7 +139,11 @@ def generate_dummy_response(prompt: str, **kwargs) -> str:
 
 def extract_python_script(response: str):
     # We will extract the python script from the response
-    python_script = response.split("```python")[1].split("```")[0]
+    if '```' in response:
+        python_script = response.split("```python")[1].split("```")[0] if '```python' in response else response.split('```')[1].split('```')[0]
+    else:
+        print(response)
+        python_script = response
     python_script = re.sub(r'^\s*(import .*|from .*\s+import\s+.*)', '', python_script, flags=re.MULTILINE)
     return python_script
 
