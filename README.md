@@ -5,6 +5,9 @@
 
 This repo contains the evaluation code for the paper "[SciCode: A Research Coding Benchmark Curated by Scientists](https://arxiv.org/abs/2407.13168)"
 
+## 🔔News
+**[2024-07-24]: We add the scientist-annotated background and support setup for w/ background evaluation.**
+
 ## Introduction
 SciCode is a challenging benchmark designed to evaluate the capabilities of language models (LMs) in generating code for solving realistic scientific research problems. It has a diverse coverage of **16** subdomains from **6** domains: Physics, Math, Material Science, Biology, and Chemistry. Unlike previous benchmarks that consist of exam-like question-answer pairs, SciCode is converted from real research problems. SciCode problems naturally factorize into multiple subproblems, each involving knowledge recall, reasoning, and code synthesis. In total, SciCode contains **338** subproblems decomposed from **80** challenging main problems, and it offers optional descriptions specifying useful scientific background information and scientist-annotated gold-standard solutions and test cases for evaluation. Claude3.5-Sonnet, the best-performing model among those tested, can solve only **4.6%** of the problems in the most realistic setting. Broadly, SciCode demonstrates a realistic and scientists' everyday workflow of identifying critical science concepts and facts and then transforming them into computation and simulation code. We believe SciCode not only helps demonstrate contemporary LLMs' progress towards helpful assistant for scientists but also helps shed light on future building and evaluation of scientific AI.
 
@@ -27,7 +30,6 @@ SciCode sources challenging and realistic research-level coding problems across 
 | Qwen2-72B-Instruct        | 17         | 1.5          |
 | Llama-3.1-70B-Instruct    | 16.3       | 1.5          |
 | Mixtral-8x22B-Instruct    | 16.3       | 0            |
-| GPT-4o-mini               | 15.3       | 1.5          |
 | Llama-3-70B-Chat          | 14.6       | 0            |
 
 ## Instructions to evaluate a new model

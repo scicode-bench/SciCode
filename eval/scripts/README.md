@@ -9,11 +9,18 @@ ANTHROPIC_KEY = 'your_api_key'
 GOOGLE_KEY = 'your_api_key' 
 ```
 
-For example, to create  model results with `gpt-4o` and the default settings, go to the root of this repo and run 
+For example, to create model results with `gpt-4o` and the default settings, go to the root of this repo and run 
 
 ```bash
 python eval/scripts/gencode_json.py --model gpt-4o
 ```
+
+For results with scientist-annotated background, run
+
+```bash
+python eval/scripts/gencode_json.py --model gpt-4o --with-background
+```
+
 
 ### Command-Line Arguments
 
@@ -21,6 +28,7 @@ python eval/scripts/gencode_json.py --model gpt-4o
 - `--output-dir` - Directory to store the generated code outputs (Default: `eval_results/generated_code`).
 - `--input-path` - Directory containing the JSON files describing the problems (Default: `eval/data/problems_all.jsonl`).
 - `--prompt-dir` - Directory where prompt files are saved (Default: `eval_results/prompt`).
+- `--with-background` - Include problem background if enabled.
 - `--temperature` - Controls the randomness of the generation (Default: 0).
   
 ## **Evaluate generated code**
