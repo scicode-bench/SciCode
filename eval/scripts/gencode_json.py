@@ -10,7 +10,7 @@ from scicode.gen.models import extract_python_script, get_model_function
 
 
 DEFAULT_PROMPT_TEMPLATE = Path("eval", "data", "background_comment_template.txt").read_text()
-
+BACKGOUND_PROMPT_TEMPLATE = Path("eval", "data", "multistep_template.txt").read_text()
 
 class Gencode:
     def __init__(self, model: str, output_dir: Path,
@@ -132,7 +132,6 @@ class Gencode:
     def generate_prompt_with_steps(self, prob_data: dict, num_steps: int,
                                    prompt_template=DEFAULT_PROMPT_TEMPLATE):
         # parse the input file and extract the content
-
         problem_steps_str, next_step_str, previous_code_str = self.process_problem_steps(prob_data,
                                                                                          num_steps)
         dependencies = prob_data["required_dependencies"]
@@ -194,6 +193,7 @@ def main(model: str,
         model=model, output_dir=output_dir,
         prompt_dir=prompt_dir,  with_background=with_background, temperature=temperature
     )
+    prompt_template = BACKGOUND_PROMPT_TEMPLATE if with_background else DEFAULT_PROMPT_TEMPLATE
     data = read_from_jsonl(input_path)
     for problem in data:
         prob_id = problem['problem_id']
@@ -203,7 +203,7 @@ def main(model: str,
             if (prob_id == "13" and i == 5) or (prob_id == "62" and i == 0)\
                     or (prob_id == "76" and i == 2):
                 continue
-            gcode.generate_response_with_steps(problem, i + 1, steps, model)
+            gcode.generate_response_with_steps(problem, i + 1, steps, model, prompt_template)
 
 
 if __name__ == "__main__":
