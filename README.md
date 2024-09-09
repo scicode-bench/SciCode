@@ -40,6 +40,11 @@ SciCode sources challenging and realistic research-level coding problems across 
 4. Run `eval/scripts/gencode_json.py` to generate new model outputs (see the [`eval/scripts` readme](eval/scripts/)) for more information
 5. Run `eval/scripts/test_generated_code.py` to evaluate the unittests
 
+## More information and FAQ
+
+More information, including a FAQ section, is provided on our [website](https://scicode-bench.github.io/).
+If you have trouble reaching the website, please find the markdown source in its [github repository](https://github.com/scicode-bench/scicode-bench.github.io/tree/main/docs).
+
 ## Contact
 - Minyang Tian: mtian8@illinois.edu
 - Eliu Huerta: elihu@anl.gov
