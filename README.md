@@ -42,7 +42,7 @@ SciCode sources challenging and realistic research-level coding problems across 
 
 ## More information and FAQ
 
-More information, including a FAQ section, is provided on our [website](https://scicode-bench.github.io/).
+More information, including a [FAQ section](https://scicode-bench.github.io/faq/), is provided on our [website](https://scicode-bench.github.io/).
 If you have trouble reaching the website, please find the markdown source in its [github repository](https://github.com/scicode-bench/scicode-bench.github.io/tree/main/docs).
 
 ## Contact
