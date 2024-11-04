@@ -7,6 +7,8 @@ This repo contains the evaluation code for the paper "[SciCode: A Research Codin
 
 ## 🔔News
 
+**[2024-11-04]: Leaderboard is on! Check [here](https://scicode-bench.github.io/leaderboard/). We have also added Claude Sonnet 3.5 (new) results.**
+
 **[2024-10-01]: We have added OpenAI o1-mini and o1-preview results.**
 
 **[2024-09-26]: SciCode is accepted at NeurIPS D&B Track 2024.**
@@ -23,21 +25,24 @@ SciCode sources challenging and realistic research-level coding problems across 
 
 ## 🏆 Leaderboard
 
-| Model                     | Subproblem | Main Problem |
-|---------------------------|------------|--------------|
-| **OpenAI o1-preview**         | **28.5**       | **7.7**          |
-| Claude3.5-Sonnet          | 26         | 4.6          |
-| GPT-4o                    | 25         | 1.5          |
-| GPT-4-Turbo               | 22.9       | 1.5          |
-| OpenAI o1-mini            | 22.2       | 1.5          |
-| Gemini 1.5 Pro            | 21.9       | 1.5          |
-| Claude3-Opus              | 21.5       | 1.5          |
-| Deepseek-Coder-v2         | 21.2       | 3.1          |
-| Claude3-Sonnet            | 17         | 1.5          |
-| Qwen2-72B-Instruct        | 17         | 1.5          |
-| Llama-3.1-70B-Instruct    | 16.3       | 1.5          |
-| Mixtral-8x22B-Instruct    | 16.3       | 0            |
-| Llama-3-70B-Chat          | 14.6       | 0            |
+| Models                   | Main Problem Resolve Rate           | <span style="color:grey">Subproblem</span>            |
+|--------------------------|-------------------------------------|-------------------------------------|
+| 🥇 OpenAI o1-preview      | <div align="center">**7.7**</div>       | <div align="center" style="color:grey">28.5</div>     |
+| 🥈 Claude3.5-Sonnet       | <div align="center">**4.6**</div>       | <div align="center" style="color:grey">26.0</div>     |
+| 🥉 Claude3.5-Sonnet (new) | <div align="center">**4.6**</div>       | <div align="center" style="color:grey">25.3</div>     |
+| Deepseek-Coder-v2        | <div align="center">**3.1**</div>       | <div align="center" style="color:grey">21.2</div>     |
+| GPT-4o                   | <div align="center">**1.5**</div>       | <div align="center" style="color:grey">25.0</div>     |
+| GPT-4-Turbo              | <div align="center">**1.5**</div>       | <div align="center" style="color:grey">22.9</div>     |
+| OpenAI o1-mini           | <div align="center">**1.5**</div>       | <div align="center" style="color:grey">22.2</div>     |
+| Gemini 1.5 Pro           | <div align="center">**1.5**</div>       | <div align="center" style="color:grey">21.9</div>     |
+| Claude3-Opus             | <div align="center">**1.5**</div>       | <div align="center" style="color:grey">21.5</div>     |
+| Llama-3.1-405B-Chat      | <div align="center">**1.5**</div>       | <div align="center" style="color:grey">19.8</div>     |
+| Claude3-Sonnet           | <div align="center">**1.5**</div>       | <div align="center" style="color:grey">17.0</div>     |
+| Qwen2-72B-Instruct       | <div align="center">**1.5**</div>       | <div align="center" style="color:grey">17.0</div>     |
+| Llama-3.1-70B-Chat       | <div align="center">**0.0**</div>       | <div align="center" style="color:grey">17.0</div>     |
+| Mixtral-8x22B-Instruct   | <div align="center">**0.0**</div>       | <div align="center" style="color:grey">16.3</div>     |
+| Llama-3-70B-Chat         | <div align="center">**0.0**</div>       | <div align="center" style="color:grey">14.6</div>     |
+
 
 ## Instructions to evaluate a new model
 
