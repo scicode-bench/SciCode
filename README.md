@@ -6,10 +6,15 @@
 This repo contains the evaluation code for the paper "[SciCode: A Research Coding Benchmark Curated by Scientists](https://arxiv.org/abs/2407.13168)"
 
 ## 🔔News
+
+**[2024-10-01]: We have added OpenAI o1-mini and o1-preview results.**
+
+**[2024-09-26]: SciCode is accepted at NeurIPS D&B Track 2024.**
+
 **[2024-07-24]: We add the scientist-annotated background and support setup for w/ background evaluation.**
 
 ## Introduction
-SciCode is a challenging benchmark designed to evaluate the capabilities of language models (LMs) in generating code for solving realistic scientific research problems. It has a diverse coverage of **16** subdomains from **6** domains: Physics, Math, Material Science, Biology, and Chemistry. Unlike previous benchmarks that consist of exam-like question-answer pairs, SciCode is converted from real research problems. SciCode problems naturally factorize into multiple subproblems, each involving knowledge recall, reasoning, and code synthesis. In total, SciCode contains **338** subproblems decomposed from **80** challenging main problems, and it offers optional descriptions specifying useful scientific background information and scientist-annotated gold-standard solutions and test cases for evaluation. Claude3.5-Sonnet, the best-performing model among those tested, can solve only **4.6%** of the problems in the most realistic setting. Broadly, SciCode demonstrates a realistic and scientists' everyday workflow of identifying critical science concepts and facts and then transforming them into computation and simulation code. We believe SciCode not only helps demonstrate contemporary LLMs' progress towards helpful assistant for scientists but also helps shed light on future building and evaluation of scientific AI.
+SciCode is a challenging benchmark designed to evaluate the capabilities of language models (LMs) in generating code for solving realistic scientific research problems. It has a diverse coverage of **16** subdomains from **6** domains: Physics, Math, Material Science, Biology, and Chemistry. Unlike previous benchmarks that consist of exam-like question-answer pairs, SciCode is converted from real research problems. SciCode problems naturally factorize into multiple subproblems, each involving knowledge recall, reasoning, and code synthesis. In total, SciCode contains **338** subproblems decomposed from **80** challenging main problems, and it offers optional descriptions specifying useful scientific background information and scientist-annotated gold-standard solutions and test cases for evaluation. OpenAI o1-preview, the best-performing model among those tested, can solve only **7.7%** of the problems in the most realistic setting. Broadly, SciCode demonstrates a realistic and scientists' everyday workflow of identifying critical science concepts and facts and then transforming them into computation and simulation code. We believe SciCode not only helps demonstrate contemporary LLMs' progress towards helpful assistant for scientists but also helps shed light on future building and evaluation of scientific AI.
 
 
 
@@ -20,9 +25,11 @@ SciCode sources challenging and realistic research-level coding problems across 
 
 | Model                     | Subproblem | Main Problem |
 |---------------------------|------------|--------------|
-| Claude3.5-Sonnet          | **26**         | **4.6**          |
+| **OpenAI o1-preview**         | **28.5**       | **7.7**          |
+| Claude3.5-Sonnet          | 26         | 4.6          |
 | GPT-4o                    | 25         | 1.5          |
 | GPT-4-Turbo               | 22.9       | 1.5          |
+| OpenAI o1-mini            | 22.2       | 1.5          |
 | Gemini 1.5 Pro            | 21.9       | 1.5          |
 | Claude3-Opus              | 21.5       | 1.5          |
 | Deepseek-Coder-v2         | 21.2       | 3.1          |
@@ -39,6 +46,11 @@ SciCode sources challenging and realistic research-level coding problems across 
 3. Download the [numeric test results](https://drive.google.com/drive/folders/1W5GZW6_bdiDAiipuFMqdUhvUaHIj6-pR?usp=drive_link) and save them as `./eval/data/test_data.h5`
 4. Run `eval/scripts/gencode_json.py` to generate new model outputs (see the [`eval/scripts` readme](eval/scripts/)) for more information
 5. Run `eval/scripts/test_generated_code.py` to evaluate the unittests
+
+## More information and FAQ
+
+More information, including a [FAQ section](https://scicode-bench.github.io/faq/), is provided on our [website](https://scicode-bench.github.io/).
+If you have trouble reaching the website, please find the markdown source in its [github repository](https://github.com/scicode-bench/scicode-bench.github.io/tree/main/docs).
 
 ## Contact
 - Minyang Tian: mtian8@illinois.edu
