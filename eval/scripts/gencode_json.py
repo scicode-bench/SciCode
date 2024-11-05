@@ -8,9 +8,9 @@ from scicode.parse.parse import (
 )
 from scicode.gen.models import extract_python_script, get_model_function
 
-
 DEFAULT_PROMPT_TEMPLATE = Path("eval", "data", "background_comment_template.txt").read_text()
 BACKGOUND_PROMPT_TEMPLATE = Path("eval", "data", "multistep_template.txt").read_text()
+
 
 class Gencode:
     def __init__(self, model: str, output_dir: Path,
@@ -57,6 +57,10 @@ class Gencode:
             save (bool, optional): Save propmt and model response. Defaults to True.
         """
         prob_id = prob_data["problem_id"]
+        output_file_path = (
+                self.output_dir / Path(self.model).parts[-1] / self._get_background_dir()
+                / f"{prob_id}.{num_steps}.py"
+        )
         if num_steps == 1:
             self.previous_llm_code = [None] * tot_steps
         else:
@@ -69,8 +73,7 @@ class Gencode:
                         prev_file_path = Path("eval", "data", f"{prob_id}.{prev_step+1}.txt")
                     else:
                         prev_file_path = (
-                                self.output_dir
-                                / model
+                                self.output_dir / Path(self.model).parts[-1] / self._get_background_dir()
                                 / f"{prob_id}.{prev_step + 1}.py"
                         )
                     if prev_file_path.is_file():
@@ -80,6 +83,9 @@ class Gencode:
                         self.previous_llm_code[prev_step] = function_code
                     else:
                         raise Exception(f'Generating {prob_id} step {num_steps} ahead of step {prev_step + 1}.')
+
+        if output_file_path.exists():
+            return
         prompt, previous_code = self.generate_prompt_with_steps(prob_data, num_steps, prompt_template)
         if save:
             self.save_prompt_with_steps(prob_data, prompt, num_steps)
@@ -89,16 +95,10 @@ class Gencode:
             model_kwargs["max_tokens"] = 4096
         model_kwargs["temperature"] = self.temperature
         # write the response to a file if it doesn't exist
-        output_file_path = (
-                self.output_dir
-                / model
-                / f"{prob_id}.{num_steps}.py"
-        )
-        if not output_file_path.exists():
-            model_fct = get_model_function(model, **model_kwargs)
-            response_from_llm = model_fct(prompt)
-            self.previous_llm_code[num_steps - 1] = extract_python_script(response_from_llm)
-            self.save_response_with_steps(prob_data, response_from_llm, previous_code, num_steps)
+        model_fct = get_model_function(model, **model_kwargs)
+        response_from_llm = model_fct(prompt)
+        self.previous_llm_code[num_steps - 1] = extract_python_script(response_from_llm)
+        self.save_response_with_steps(prob_data, response_from_llm, previous_code, num_steps)
 
     @staticmethod
     def process_problem_code(prob_data: dict, num_steps: int) -> str:
