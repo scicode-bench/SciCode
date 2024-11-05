@@ -11,9 +11,9 @@ This repo contains the evaluation code for the paper "[SciCode: A Research Codin
 
 **[2024-10-01]: We have added OpenAI o1-mini and o1-preview results.**
 
-**[2024-08-22]: The SciCode benchmark has been successfully integrated into [OpenCompass](https://github.com/open-compass/opencompass).**
-
 **[2024-09-26]: SciCode is accepted at NeurIPS D&B Track 2024.**
+
+**[2024-08-22]: The SciCode benchmark has been successfully integrated into [OpenCompass](https://github.com/open-compass/opencompass).**
 
 **[2024-07-24]: We add the scientist-annotated background and support setup for w/ background evaluation.**
 
