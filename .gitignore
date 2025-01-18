@@ -5,6 +5,7 @@ keys.cfg
 **/eval_results/**
 eval/logs/**
 *.h5
+logs/**
 
 
 # -------
