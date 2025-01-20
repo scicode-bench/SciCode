@@ -24,7 +24,6 @@ for input, output in zip(input_paths, output_paths):
         problem_converted = copy.deepcopy(problem)
         for sub_step in problem['sub_steps']:
             problem_converted = copy.deepcopy(problem)
-            del problem_converted['sub_steps']
             for key, value in sub_step.items():
                 problem_converted[key] = value
             problem_converted["problem_id"] = problem_converted["step_number"]

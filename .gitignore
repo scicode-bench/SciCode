@@ -6,7 +6,8 @@ keys.cfg
 eval/logs/**
 *.h5
 logs/**
-
+**/logs/**
+**/tmp/**
 
 # -------
 
