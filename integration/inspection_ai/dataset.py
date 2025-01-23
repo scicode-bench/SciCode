@@ -1,41 +1,22 @@
-import os
-import time
 from typing import Any
 from pathlib import Path
-from inspect_ai.dataset import FieldSpec, json_dataset
-from inspect_ai import Task, eval, task
-from inspect_ai.dataset import Sample, hf_dataset
-from inspect_ai.scorer import choice
-from inspect_ai.solver import multiple_choice, system_message
-from scicode.parse.parse import (
-    extract_function_name,
-    get_function_from_code,
-    read_from_jsonl
-)
+from inspect_ai import Task, task
+from inspect_ai.dataset import json_dataset, Sample
 from inspect_ai.solver import solver, TaskState, Generate
-from inspect_ai.scorer import (
-    CORRECT,
-    INCORRECT,
-    AnswerPattern,
-    Score,
-    Target,
-    accuracy,
-    stderr,
-    scorer,
-)
+from inspect_ai.scorer import CORRECT, Score, Target, accuracy, stderr, scorer
+from scicode.parse.parse import extract_function_name, get_function_from_code
 from scicode.gen.models import generate_dummy_response, extract_python_script
 
-DEFAULT_PROMPT_TEMPLATE = Path("data", "background_comment_template.txt").read_text()
-BACKGOUND_PROMPT_TEMPLATE = Path("data", "multistep_template.txt").read_text()
-
-# SCICODE_DATA_JSON_PATH = "/eagle/tpc/zilinghan/SciCode/integration/inspection_ai/data/problems_dev.json"
-# SCICODE_DATA_JSON_PATH = "/eagle/tpc/zilinghan/SciCode/integration/inspection_ai/data/problems_all.json
-SCICODE_DATA_JSON_PATH = "/eagle/tpc/zilinghan/SciCode/integration/inspection_ai/data/problems_dev_new.json"
+SAVE = True
 TEMP_DIR = "./tmp"
 MODEL_NAME = "gpt-4o"
 WITH_BACKGROUND = False
-TIMEOUT = 1000
-SAVE = True
+DEFAULT_PROMPT_TEMPLATE = Path("data", "background_comment_template.txt").read_text()
+BACKGOUND_PROMPT_TEMPLATE = Path("data", "multistep_template.txt").read_text()
+
+SCICODE_DATA_JSON_PATH = "/eagle/tpc/zilinghan/SciCode/integration/inspection_ai/data/problems_all_new.json"
+# SCICODE_DATA_JSON_PATH = "/eagle/tpc/zilinghan/SciCode/integration/inspection_ai/data/problems_dev.json"
+# SCICODE_DATA_JSON_PATH = "/eagle/tpc/zilinghan/SciCode/integration/inspection_ai/data/problems_all.json
 
 class PromptingAssistant:
     def __init__(
@@ -56,9 +37,16 @@ class PromptingAssistant:
         self,
         prob_data: dict,
         response: str,
+        previous_code: str,
         num_steps: int,
     ):
-        self.previous_llm_code[num_steps - 1] = response
+        self.previous_llm_code[num_steps - 1] = extract_python_script(response)
+        self.save_response_with_steps(
+            prob_data,
+            response,
+            previous_code,
+            num_steps,
+        )
     
     def save_response_with_steps(
         self, 
@@ -167,7 +155,10 @@ class PromptingAssistant:
                         (prob_id == "62" and prev_step == 0) or 
                         (prob_id == "76" and prev_step == 2)
                     ):
-                        prev_file_path = os.path.join("data", f"{prob_id}.{prev_step+1}.txt")
+                        prev_file_path = Path(
+                            "data",
+                            f"{prob_id}.{prev_step+1}.txt"
+                        )
                     else:
                         prev_file_path = Path(
                             self.output_dir,
@@ -201,151 +192,6 @@ class PromptingAssistant:
         return prompt, previous_code
             
 
-def save_prompt_with_steps(
-    record,
-    prompt,
-    num_steps,
-):
-    output_dir = Path(
-        TEMP_DIR,
-        "prompt",
-        MODEL_NAME,
-        "with_background" if WITH_BACKGROUND else "without_background"
-    )
-    output_dir.mkdir(parents=True, exist_ok=True)
-    output_file_path = output_dir / f"{record['problem_id']}.{num_steps}.txt"
-    output_file_path.write_text(prompt, encoding="utf-8")
-
-def process_problem_code(
-    record,
-    prob_step_id,
-):
-    header_docstring = record["sub_steps"][prob_step_id-1]["function_header"]
-    return_str = record["sub_steps"][prob_step_id-1]["return_line"]
-    return f"{header_docstring}\n\n{return_str}"
-
-def process_problem_steps(record, prob_step_id, previous_llm_code):
-    output_lines = []
-    next_step = []
-    previous_code = []
-    for i in range(prob_step_id-1):
-        output_lines.append(
-            record["sub_steps"][i]["step_description_prompt"] + '\n' +
-            record["sub_steps"][i]["step_background"] if WITH_BACKGROUND else record["sub_steps"][i]["step_description_prompt"]
-        ) # TODO: Check if this is correct
-        output_lines.append(previous_llm_code[i])
-        previous_code.append(previous_llm_code[i])
-        output_lines.append("------")
-    
-    next_step.append(
-        record["sub_steps"][prob_step_id-1]["step_description_prompt"] + '\n' +
-        record["sub_steps"][prob_step_id-1]["step_background"] if WITH_BACKGROUND else record["sub_steps"][prob_step_id-1]["step_description_prompt"]
-    )
-    next_step.append(
-        process_problem_code(record, prob_step_id)
-    )
-    output_str = "\n\n".join(output_lines[:-1])
-    next_step_str = "\n\n".join(next_step)
-    previous_code_str = "\n".join(previous_code)
-    return output_str, next_step_str, previous_code_str
-    
-def generate_prompt_with_steps(
-    record,
-    prob_step_id,
-    prompt_template,
-    previous_llm_code,
-):
-    problem_step_str, next_step_str, previous_code_str = process_problem_steps(record, prob_step_id, previous_llm_code)
-    depedencies = record["required_dependencies"]
-    assert next_step_str
-    return prompt_template.format(
-        problem_steps_str=problem_step_str,
-        next_step_str=next_step_str,
-        dependencies=depedencies,
-    ), f'{depedencies}\n{previous_code_str}\n'
-
-# Dataset preparation
-def record_to_sample_fake(record):
-    prob_id = record["problem_id"]
-    output_file_path = os.path.join(
-        TEMP_DIR,
-        "generated_code",
-        MODEL_NAME,
-        "with_background" if WITH_BACKGROUND else "without_background",
-        f"{prob_id}.py"
-    )
-    
-    prob_main_id, prob_step_id = prob_id.split(".")
-    prob_step_id = int(prob_step_id)
-    previous_llm_code = []
-    if prob_step_id != 1:
-        for prev_step in range(prob_step_id - 1):
-            if (prob_main_id == "13" and prev_step == 5) or (prob_main_id == "62" and prev_step == 0) or (prob_main_id == "76" and prev_step == 2):
-                prev_file_path = os.path.join("data", f"{prob_main_id}.{prev_step+1}.txt")
-                exist_flag = True
-            else:
-                prev_file_path = os.path.join(
-                    TEMP_DIR,
-                    "generated_code",
-                    MODEL_NAME,
-                    "with_background" if WITH_BACKGROUND else "without_background",
-                    f"{prob_main_id}.{prev_step + 1}.py"
-                )
-                prev_exist_flag_file_path = os.path.join(
-                    TEMP_DIR,
-                    "generated_code",
-                    MODEL_NAME,
-                    "with_background" if WITH_BACKGROUND else "without_background",
-                    f"_{prob_main_id}.{prev_step + 1}.txt"
-                )
-                exist_flag = False
-            # Wait until the previous file is generated
-            timer = 0
-            while (
-                (not exist_flag) and 
-                (not os.path.exists(prev_exist_flag_file_path))
-            ):
-                time.sleep(1)
-                timer += 1
-                if timer > TIMEOUT:
-                    raise TimeoutError(f"Timeout waiting for {prev_exist_flag_file_path}")
-            # Read previous code
-            prev_file_content = Path(prev_file_path).read_text(encoding='utf-8')
-            func_name = extract_function_name(
-                record["sub_steps"][prev_step]["function_header"]
-            )
-            function_code = get_function_from_code(
-                prev_file_content, func_name
-            )
-            previous_llm_code.append(function_code)
-            
-    prompt, previous_code = generate_prompt_with_steps(
-        record,
-        prob_step_id,
-        DEFAULT_PROMPT_TEMPLATE if not WITH_BACKGROUND else BACKGOUND_PROMPT_TEMPLATE,
-        previous_llm_code,
-    )
-    
-    if SAVE:
-        save_prompt_with_steps(
-            record,
-            prompt,
-            prob_step_id,
-        )
-    
-    record["_output_file_path"] = output_file_path
-    record["_previous_code"] = previous_code
-    print(f'Generated prompt for problem {prob_id}')
-
-    return Sample(
-        input=prompt,
-        target=record["problem_id"],
-        id=record["problem_id"],
-        metadata={
-            k: v for k, v in record.items() if k not in ["problem_id"]
-        }
-    )
-
 def record_to_sample(record):
     return Sample(
         input="problem_id",
@@ -374,7 +220,14 @@ def dummy_solver(**params: dict[str, Any]):
         print('===============================')
         print(f'Processing problem {state.sample_id}')
         sub_steps = state.metadata["sub_steps"]
-        for idx, step in enumerate(sub_steps):
+        for idx in range(len(sub_steps)):
+            prob_id = state.metadata["problem_id"]
+            if (
+                (prob_id == "13" and idx == 5) or
+                (prob_id == "62" and idx == 0) or
+                (prob_id == "76" and idx == 2)
+            ):
+                continue
             prompt, previous_code = prompt_assistant.prepare_final_prompt_with_steps(
                 prob_data=state.metadata,
                 num_steps=idx+1,
@@ -384,10 +237,10 @@ def dummy_solver(**params: dict[str, Any]):
             response_from_llm = generate_dummy_response(prompt)
             prompt_assistant.register_previous_response(
                 prob_data=state.metadata,
-                response=extract_python_script(response_from_llm),
+                response=response_from_llm,
+                previous_code=previous_code,
                 num_steps=idx+1,
             )
-            
         print('===============================')
         return state
 
