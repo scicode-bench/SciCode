@@ -118,9 +118,9 @@ def process_hdf5_datagroup(group):
             return process_hdf5_dict(group)
 
 
-def process_hdf5_to_tuple(step_id, test_num):
+def process_hdf5_to_tuple(step_id, test_num, h5py_file=H5PY_FILE):
     data_lst = []
-    with h5py.File(H5PY_FILE, 'r') as f:
+    with h5py.File(h5py_file, 'r') as f:
         for test_id in range(test_num):
             group_path = f'{step_id}/test{test_id + 1}'
             if isinstance(f[group_path], h5py.Group):
