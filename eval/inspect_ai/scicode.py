@@ -245,9 +245,9 @@ from scicode.parse.parse import process_hdf5_to_tuple
                 subprocess.run(['python', script_path], check=True, capture_output=True,
                             text=True, timeout=1800)
                 return 0
-            except subprocess.CalledProcessError as e:
+            except subprocess.CalledProcessError:
                 return 1
-            except subprocess.TimeoutExpired as e:
+            except subprocess.TimeoutExpired:
                 return 2
             
         total_steps = len(sub_steps)
