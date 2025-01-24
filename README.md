@@ -7,6 +7,8 @@ This repo contains the evaluation code for the paper "[SciCode: A Research Codin
 
 ## 🔔News
 
+**[2025-01-24]: SciCode has been integrated with [`inspect_ai`](https://inspect.ai-safety-institute.org.uk/) for easier and faster model evaluations.**
+
 **[2024-11-04]: Leaderboard is on! Check [here](https://scicode-bench.github.io/leaderboard/). We have also added Claude Sonnet 3.5 (new) results.**
 
 **[2024-10-01]: We have added OpenAI o1-mini and o1-preview results.**
@@ -53,6 +55,19 @@ SciCode sources challenging and realistic research-level coding problems across 
 3. Download the [numeric test results](https://drive.google.com/drive/folders/1W5GZW6_bdiDAiipuFMqdUhvUaHIj6-pR?usp=drive_link) and save them as `./eval/data/test_data.h5`
 4. Run `eval/scripts/gencode_json.py` to generate new model outputs (see the [`eval/scripts` readme](eval/scripts/)) for more information
 5. Run `eval/scripts/test_generated_code.py` to evaluate the unittests
+
+
+## Instructions to evaluate a new model using `inspect_ai` (recommended)
+
+Scicode has been integrated with `inspect_ai` for easier and faster model evaluation, compared with the methods above. You need to run the first three steps in the [above section](#instructions-to-evaluate-a-new-model), and then go to the `eval/inspect_ai` directory, setup correspoinding API key, and run the following command:
+
+```bash
+cd eval/inspect_ai
+export OPENAI_API_KEY=your-openai-api-key
+inspect eval scicode.py --model openai/gpt-4o --temperature 0
+```
+
+For more detailed information of using `inspect_ai`, see [`eval/inspect_ai` readme](eval/inspect_ai/)
 
 ## More information and FAQ
 
