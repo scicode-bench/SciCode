@@ -37,6 +37,7 @@ dependencies = [
     "scipy",
     "matplotlib",
     "sympy",
+    "inspect-ai",
 ]
 
 # Classifiers help users find your project by categorizing it.

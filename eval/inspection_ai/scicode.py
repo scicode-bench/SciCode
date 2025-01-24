@@ -119,7 +119,10 @@ class ScicodePromptingAssistant:
             prompt: str, 
             num_steps: int
         ) -> None:
-        output_dir = Path(self.prompt_dir, self._get_background_dir())
+        output_dir = Path(
+            self.prompt_dir, 
+            self._get_background_dir()
+        )
         output_dir.mkdir(parents=True, exist_ok=True)
         output_file_path = output_dir / f"{prob_data['problem_id']}.{num_steps}.txt"
         output_file_path.write_text(prompt, encoding="utf-8")
@@ -185,8 +188,8 @@ class ScicodeEvaluator:
     def __init__(
         self,
         h5py_file: str,
-        code_dir: str,
-        log_dir: str,
+        code_dir: Path,
+        log_dir: Path,
         with_background: bool,
     ):
         self.h5py_file = h5py_file
@@ -306,9 +309,10 @@ def generate_gold_response(prob_data: dict, num_steps: int):
 @solver
 def scicode_solver(**params: dict[str, Any]):
     async def solve(state: TaskState, generate: Generate) -> TaskState:
+        model_name = str(state.model).replace("/", "-")
         prompt_assistant = ScicodePromptingAssistant(
-            output_dir=Path(params["output_dir"], "generated_code"),
-            prompt_dir=Path(params["output_dir"], "prompt"),
+            output_dir=Path(params["output_dir"], model_name, "generated_code"),
+            prompt_dir=Path(params["output_dir"], model_name, "prompt"),
             with_background=params["with_background"],
         )
         prompt_template = BACKGOUND_PROMPT_TEMPLATE if params["with_background"] else DEFAULT_PROMPT_TEMPLATE
@@ -365,10 +369,11 @@ def sub_problem_correctness() -> Metric:
 )
 def scicode_scorer(**params: dict[str, Any]):
     async def score(state: TaskState, target: Target):
+        model_name = str(state.model).replace("/", "-")
         evaluator = ScicodeEvaluator(
             h5py_file=params["h5py_file"],
-            code_dir=params["output_dir"],
-            log_dir=params["output_dir"],
+            code_dir=Path(params["output_dir"], model_name),
+            log_dir=Path(params["output_dir"], model_name),
             with_background=params["with_background"],
         )
         problem_correct, total_correct, total_steps = evaluator.test_code(state.metadata)
