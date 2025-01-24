@@ -1,3 +1,4 @@
+import copy
 import time
 import shutil
 import subprocess
@@ -10,16 +11,8 @@ from inspect_ai.scorer import scorer, mean, metric, Metric, Score, Target
 from scicode.parse.parse import extract_function_name, get_function_from_code
 from scicode.gen.models import generate_dummy_response, extract_python_script
 
-SAVE = True
-TEMP_DIR = "./tmp"
-MODEL_NAME = "gpt-4o"
-WITH_BACKGROUND = False
-H5PY_FILE = "/eagle/tpc/zilinghan/SciCode/eval/data/test_data.h5"
-BACKGOUND_PROMPT_TEMPLATE = Path("data", "multistep_template.txt").read_text()
-DEFAULT_PROMPT_TEMPLATE = Path("data", "background_comment_template.txt").read_text()
-SCICODE_DATA_JSON_PATH = "/eagle/tpc/zilinghan/SciCode/integration/inspection_ai/data/problems_all_new.json"
-# SCICODE_DATA_JSON_PATH = "/eagle/tpc/zilinghan/SciCode/integration/inspection_ai/data/problems_dev.json"
-# SCICODE_DATA_JSON_PATH = "/eagle/tpc/zilinghan/SciCode/integration/inspection_ai/data/problems_all.json
+BACKGOUND_PROMPT_TEMPLATE = Path("../data", "multistep_template.txt").read_text()
+DEFAULT_PROMPT_TEMPLATE = Path("../data", "background_comment_template.txt").read_text()
 
 class ScicodePromptingAssistant:
     def __init__(
@@ -141,11 +134,6 @@ class ScicodePromptingAssistant:
         save: bool = True
     ):
         prob_id = prob_data["problem_id"]
-        output_file_path = Path(
-            self.output_dir, 
-            self._get_background_dir(),
-            f"{prob_id}.{num_steps}.py"
-        )
         if num_steps == 1:
             self.previous_llm_code = [None] * tot_steps
         else:
@@ -159,7 +147,7 @@ class ScicodePromptingAssistant:
                         (prob_id == "76" and prev_step == 2)
                     ):
                         prev_file_path = Path(
-                            "data",
+                            "../data",
                             f"{prob_id}.{prev_step+1}.txt"
                         )
                     else:
@@ -224,6 +212,12 @@ class ScicodeEvaluator:
         sub_steps = prob_data["sub_steps"]
         problem_id = prob_data["problem_id"]
         for idx in range(len(sub_steps)):
+            if (
+                (problem_id == "13" and idx == 5) or
+                (problem_id == "62" and idx == 0) or
+                (problem_id == "76" and idx == 2)
+            ):
+                continue
             step_id = sub_steps[idx]["step_number"]
             code_file_path = Path(code_dir, f"{step_id}.py")
             assert code_file_path.is_file(), f"Code file {code_file_path} not found."
@@ -249,11 +243,8 @@ from scicode.parse.parse import process_hdf5_to_tuple
                             text=True, timeout=1800)
                 return 0
             except subprocess.CalledProcessError as e:
-                print(f"Error running script {script_path}: {e}")
-                print(e.output)
                 return 1
             except subprocess.TimeoutExpired as e:
-                print(f"Runtime error while running script {script_path}: {e}")
                 return 2
             
         total_steps = len(sub_steps)
@@ -288,7 +279,6 @@ from scicode.parse.parse import process_hdf5_to_tuple
                 with open(logs_file, 'w') as f:
                     f.write('pass')
                 total_correct += 1
-                print(f"Problem {problem_id} step {idx + 1} passed.")
             elif ret == 1:
                 with open(logs_file, 'w') as f:
                     f.write('fail')
@@ -310,23 +300,18 @@ def record_to_sample(record):
         }
     )
 
-dataset = json_dataset(
-    SCICODE_DATA_JSON_PATH, 
-    record_to_sample
-)
-    
+def generate_gold_response(prob_data: dict, num_steps: int):
+    return f"Blah blah\n```python\n{prob_data['sub_steps'][num_steps - 1]['ground_truth_code']}\n```\n"
 
 @solver
 def scicode_solver(**params: dict[str, Any]):
     async def solve(state: TaskState, generate: Generate) -> TaskState:
         prompt_assistant = ScicodePromptingAssistant(
-            output_dir=Path(TEMP_DIR, "generated_code"),
-            prompt_dir=Path(TEMP_DIR, "prompt"),
-            with_background=WITH_BACKGROUND,
+            output_dir=Path(params["output_dir"], "generated_code"),
+            prompt_dir=Path(params["output_dir"], "prompt"),
+            with_background=params["with_background"],
         )
-        prompt_template = BACKGOUND_PROMPT_TEMPLATE if WITH_BACKGROUND else DEFAULT_PROMPT_TEMPLATE
-        print('===============================')
-        print(f'Processing problem {state.sample_id}')
+        prompt_template = BACKGOUND_PROMPT_TEMPLATE if params["with_background"] else DEFAULT_PROMPT_TEMPLATE
         sub_steps = state.metadata["sub_steps"]
         for idx in range(len(sub_steps)):
             prob_id = state.metadata["problem_id"]
@@ -342,16 +327,24 @@ def scicode_solver(**params: dict[str, Any]):
                 tot_steps=len(sub_steps),
                 prompt_template=prompt_template,
             )
-            response_from_llm = generate_dummy_response(prompt)
+            if params["mode"] == "dummy":
+                response_from_llm = generate_dummy_response(prompt)
+            elif params["mode"] == "gold":
+                response_from_llm = generate_gold_response(state.metadata, idx+1)
+            else:
+                # ===Model Generation===
+                state.user_prompt.text = prompt
+                state_copy = copy.deepcopy(state)
+                result = await generate(state=state_copy)
+                response_from_llm = result.output.completion
+                # ===Model Generation===
             prompt_assistant.register_previous_response(
                 prob_data=state.metadata,
                 response=response_from_llm,
                 previous_code=previous_code,
                 num_steps=idx+1,
             )
-        print('===============================')
         return state
-
     return solve
 
 @metric
@@ -362,7 +355,6 @@ def sub_problem_correctness() -> Metric:
         for score in scores:
             total_correct += score.value["Total Correct"]
             total_steps += score.value["Total Steps"]
-        print(f"Total correct: {total_correct}, Total steps: {total_steps}")
         return total_correct / total_steps
     return metric
 
@@ -371,13 +363,13 @@ def sub_problem_correctness() -> Metric:
         "Problem Correctness": [mean()],
     }, sub_problem_correctness()]
 )
-def test_scorer():
+def scicode_scorer(**params: dict[str, Any]):
     async def score(state: TaskState, target: Target):
         evaluator = ScicodeEvaluator(
-            h5py_file=H5PY_FILE,
-            code_dir=TEMP_DIR,
-            log_dir=TEMP_DIR,
-            with_background=WITH_BACKGROUND,
+            h5py_file=params["h5py_file"],
+            code_dir=params["output_dir"],
+            log_dir=params["output_dir"],
+            with_background=params["with_background"],
         )
         problem_correct, total_correct, total_steps = evaluator.test_code(state.metadata)
         return Score(
@@ -390,9 +382,29 @@ def test_scorer():
     return score
 
 @task
-def dummy_task():
+def scicode(
+    input_path: str = '../data/problems_all.jsonl',
+    output_dir: str = './tmp',
+    with_background: bool = False,
+    h5py_file: str = '../data/test_data.h5',
+    mode: str = 'normal',
+):
+    dataset = json_dataset(
+        input_path, 
+        record_to_sample
+    )
     return Task(
         dataset=dataset,
-        solver=scicode_solver(),
-        scorer=test_scorer(),
+        solver=scicode_solver(
+            input_path=input_path,
+            output_dir=output_dir,
+            with_background=with_background,
+            mode=mode,
+        ),
+        scorer=scicode_scorer(
+            input_path=input_path,
+            output_dir=output_dir,
+            with_background=with_background,
+            h5py_file=h5py_file,
+        ),
     )
