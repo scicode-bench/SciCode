@@ -15,7 +15,7 @@ name = "scicode"
 dynamic = ["version",]
 description = "todo"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = {file = "LICENSE"}
 keywords = ["nlp", "code"]
 authors = [
@@ -37,6 +37,7 @@ dependencies = [
     "scipy",
     "matplotlib",
     "sympy",
+    "inspect-ai",
 ]
 
 # Classifiers help users find your project by categorizing it.

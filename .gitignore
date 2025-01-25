@@ -2,10 +2,13 @@
 keys.cfg
 **/test_result/**
 **/output/**
-**/eval_results/**
+**/eval_results*/**
 eval/logs/**
 *.h5
-
+logs/**
+**/logs/**
+**/tmp/**
+integration/**
 
 # -------
 
