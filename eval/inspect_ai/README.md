@@ -38,3 +38,17 @@ inspect eval scicode.py \
 ```
 
 For more information regarding `inspect_ai`, we refer users to its [official documentation](https://inspect.ai-safety-institute.org.uk/).
+
+### Extra: How SciCode are Evaluated Under the Hood?
+
+During the evaluation, the sub-steps of each main problem of SciCode are passed in order to the evalauted LLM with necessary prompts and LLM responses for previous sub-steps. The generated Python code from LLM will be parsed and saved to disk, which will be used to run on test cases to determine the pass or fail for the sub-steps. The main problem will be considered as solved if the LLM can pass all sub-steps of the main problem. 
+
+### Extra: Reproducibility of `inspect_ai` Integration 
+We use the SciCode `inspect_ai` integration to evaluate OpenAI's GPT-4o, and we compare it with the original way of evaluation. Below shows the comparison of two ways of the evaluations. 
+
+*[💡It should be noted that it is common to have slightly different results due to the randomness of LLM generations.]*
+
+| Methods                   | Main Problem Resolve Rate           | <span style="color:grey">Subproblem</span>            |
+|---------------------------|-------------------------------------|-------------------------------------------------------|
+| `inspect_ai` Evaluation   | <div align="center">**3.1 (2/65)**</div>   | <div align="center" style="color:grey">25.1</div>     |
+| Original Evaluation       | <div align="center">**1.5 (1/65)**</div>   | <div align="center" style="color:grey">25.0</div>     |
