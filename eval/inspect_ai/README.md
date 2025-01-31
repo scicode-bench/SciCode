@@ -14,10 +14,11 @@ inspect eval scicode.py --model <your_model> --temperature 0
 
 However, there are some additional command line arguments that could be useful as well.
 
-- `--max_connections`: Maximum amount of API connections to the evaluated model.
+- `--max-connections`: Maximum amount of API connections to the evaluated model.
 - `--limit`: Limit of the number of samples to evaluate in the SciCode dataset.
 - `-T input_path=<another_input_json_file>`: This is useful when user wants to change to another json dataset (e.g., the dev set).
 - `-T output_dir=<your_output_dir>`: This changes the default output directory (`./tmp`).
+- `-T h5py_file=<your_h5py_file>`: This is used if your h5py file is not downloaded in the recommended directory.
 - `-T with_background=True/False`: Whether to include problem background.
 - `-T mode=normal/gold/dummy`: This provides two additional modes for sanity checks.
     - `normal` mode is the standard mode to evaluate a model
@@ -35,6 +36,19 @@ inspect eval scicode.py \
     -T output_dir=./tmp/dev \
     -T with_background=True \
     -T mode=gold
+```
+
+User can run the evaluation on `Deepseek-v3` using together ai via the following command:
+
+```bash
+export TOGETHER_API_KEY=<YOUR_API_KEY>
+inspect eval scicode.py \
+    --model together/deepseek-ai/DeepSeek-V3 \
+    --temperature 0 \
+    --max-connections 2 \
+    --max-tokens 32784 \
+    -T output_dir=./tmp/deepseek-v3 \
+    -T with_background=False
 ```
 
 For more information regarding `inspect_ai`, we refer users to its [official documentation](https://inspect.ai-safety-institute.org.uk/).
