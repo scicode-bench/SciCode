@@ -336,12 +336,16 @@ def scicode_solver(**params: dict[str, Any]):
             elif params["mode"] == "gold":
                 response_from_llm = generate_gold_response(state.metadata, idx+1)
             else:
-                # ===Model Generation===
-                state.user_prompt.text = prompt
-                state_copy = copy.deepcopy(state)
-                result = await generate(state=state_copy)
-                response_from_llm = result.output.completion
-                # ===Model Generation===
+                try:
+                    # ===Model Generation===
+                    state.user_prompt.text = prompt
+                    state_copy = copy.deepcopy(state)
+                    result = await generate(state=state_copy)
+                    response_from_llm = result.output.completion
+                    # ===Model Generation===
+                except:
+                    print(f"Failed to generate response for problem {prob_id} step {idx+1}.")
+                    response_from_llm = generate_dummy_response(prompt)
             prompt_assistant.register_previous_response(
                 prob_data=state.metadata,
                 response=response_from_llm,
