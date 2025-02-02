@@ -7,6 +7,8 @@ This repo contains the evaluation code for the paper "[SciCode: A Research Codin
 
 ## 🔔News
 
+**[2025-02-01]: Results for DeepSeek-R1, DeepSeek-V3, and OpenAI o3-mini are added.**
+
 **[2025-01-24]: SciCode has been integrated with [`inspect_ai`](https://inspect.ai-safety-institute.org.uk/) for easier and faster model evaluations.**
 
 **[2024-11-04]: Leaderboard is on! Check [here](https://scicode-bench.github.io/leaderboard/). We have also added Claude Sonnet 3.5 (new) results.**
