@@ -33,9 +33,11 @@ SciCode sources challenging and realistic research-level coding problems across 
 
 | Models                   | Main Problem Resolve Rate           | <span style="color:grey">Subproblem</span>            |
 |--------------------------|-------------------------------------|-------------------------------------|
-| 🥇 OpenAI o3-mini        | <div align="center">**9.2**</div>       | <div align="center" style="color:grey">33.0</div>     |
-| 🥈 OpenAI o1-preview     | <div align="center">**7.7**</div>       | <div align="center" style="color:grey">28.5</div>     |
-| 🥉 Deepseek-R1           | <div align="center">**4.6**</div>       | <div align="center" style="color:grey">28.5</div>     |
+| 🥇 OpenAI o3-mini-low    | <div align="center">**10.8**</div>      | <div align="center" style="color:grey">33.3</div>     |
+| 🥈 OpenAI o3-mini-high   | <div align="center">**9.2**</div>       | <div align="center" style="color:grey">34.4</div>     |
+| 🥉 OpenAI o3-mini-medium | <div align="center">**9.2**</div>       | <div align="center" style="color:grey">33.0</div>     |
+| OpenAI o1-preview        | <div align="center">**7.7**</div>       | <div align="center" style="color:grey">28.5</div>     |
+| Deepseek-R1              | <div align="center">**4.6**</div>       | <div align="center" style="color:grey">28.5</div>     |
 | Claude3.5-Sonnet         | <div align="center">**4.6**</div>       | <div align="center" style="color:grey">26.0</div>     |
 | Claude3.5-Sonnet (new)   | <div align="center">**4.6**</div>       | <div align="center" style="color:grey">25.3</div>     |
 | Deepseek-v3              | <div align="center">**3.1**</div>       | <div align="center" style="color:grey">23.7</div>     |
