@@ -4,7 +4,7 @@ from pathlib import Path
 from scicode.parse.parse import (
     extract_function_name,
     get_function_from_code,
-    read_from_jsonl
+    read_from_hf_dataset,
 )
 from scicode.gen.models import extract_python_script, get_model_function
 
@@ -151,16 +151,17 @@ def get_cli() -> argparse.ArgumentParser:
         "--model", type=str, default="gpt-4o", help="Model name"
     )
     parser.add_argument(
+        "--split", 
+        type=str, 
+        default="test", 
+        choices=["validation", "test"], 
+        help="Dataset split manner",
+    )
+    parser.add_argument(
         "--output-dir",
         type=Path,
         default=Path("eval_results", "generated_code"),
         help="Output directory",
-    )
-    parser.add_argument(
-        "--input-path",
-        type=Path,
-        default=Path("eval", "data", "problems_all.jsonl"),
-        help="Input directory",
     )
     parser.add_argument(
         "--prompt-dir",
@@ -183,8 +184,8 @@ def get_cli() -> argparse.ArgumentParser:
 
 
 def main(model: str,
+         split: str,
          output_dir: Path,
-         input_path: Path,
          prompt_dir: Path,
          with_background: bool,
          temperature: float
@@ -194,7 +195,7 @@ def main(model: str,
         prompt_dir=prompt_dir,  with_background=with_background, temperature=temperature
     )
     prompt_template = BACKGOUND_PROMPT_TEMPLATE if with_background else DEFAULT_PROMPT_TEMPLATE
-    data = read_from_jsonl(input_path)
+    data = read_from_hf_dataset(split)
     for problem in data:
         prob_id = problem['problem_id']
         steps = len(problem['sub_steps'])

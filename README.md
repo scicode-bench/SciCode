@@ -7,6 +7,8 @@ This repo contains the evaluation code for the paper "[SciCode: A Research Codin
 
 ## 🔔News
 
+**[2025-02-17]: SciCode benchmark is available at [HuggingFace Datasets](https://huggingface.co/datasets/Zilinghan/scicode)!**
+
 **[2025-02-01]: Results for DeepSeek-R1, DeepSeek-V3, and OpenAI o3-mini are added.**
 
 **[2025-01-24]: SciCode has been integrated with [`inspect_ai`](https://inspect.ai-safety-institute.org.uk/) for easier and faster model evaluations.**
@@ -54,19 +56,15 @@ SciCode sources challenging and realistic research-level coding problems across 
 | Mixtral-8x22B-Instruct   | <div align="center">**0.0**</div>       | <div align="center" style="color:grey">16.3</div>     |
 | Llama-3-70B-Chat         | <div align="center">**0.0**</div>       | <div align="center" style="color:grey">14.6</div>     |
 
+## Instructions to evaluate a new model using `inspect_ai` (recommended)
 
-## Instructions to evaluate a new model
+
+Scicode has been integrated with `inspect_ai` for easier and faster model evaluation. You need to run the following steps ro run:
 
 1. Clone this repository `git clone git@github.com:scicode-bench/SciCode.git`
 2. Install the `scicode` package with `pip install -e .`
 3. Download the [numeric test results](https://drive.google.com/drive/folders/1W5GZW6_bdiDAiipuFMqdUhvUaHIj6-pR?usp=drive_link) and save them as `./eval/data/test_data.h5`
-4. Run `eval/scripts/gencode_json.py` to generate new model outputs (see the [`eval/scripts` readme](eval/scripts/)) for more information
-5. Run `eval/scripts/test_generated_code.py` to evaluate the unittests
-
-
-## Instructions to evaluate a new model using `inspect_ai` (recommended)
-
-Scicode has been integrated with `inspect_ai` for easier and faster model evaluation, compared with the methods above. You need to run the first three steps in the [above section](#instructions-to-evaluate-a-new-model), and then go to the `eval/inspect_ai` directory, setup correspoinding API key, and run the following command:
+4. Go to the `eval/inspect_ai` directory, setup correspoinding API key, and run the following command:
 
 ```bash
 cd eval/inspect_ai
@@ -74,7 +72,14 @@ export OPENAI_API_KEY=your-openai-api-key
 inspect eval scicode.py --model openai/gpt-4o --temperature 0
 ```
 
-For more detailed information of using `inspect_ai`, see [`eval/inspect_ai` readme](eval/inspect_ai/)
+💡 For more detailed information of using `inspect_ai`, see [`eval/inspect_ai` readme](eval/inspect_ai/)
+
+## Instructions to evaluate a new model in two steps (deprecated)
+
+It should be noted that this is a deprecated way to evaluating models, and using `inspect_ai` is the recommended way. Please use this method only if `inspect_ai` does not work for your need. You need to run the first three steps in the above section, then run the following two commands:
+
+4. Run `eval/scripts/gencode.py` to generate new model outputs (see the [`eval/scripts` readme](eval/scripts/)) for more information
+5. Run `eval/scripts/test_generated_code.py` to evaluate the unittests
 
 ## More information and FAQ
 
