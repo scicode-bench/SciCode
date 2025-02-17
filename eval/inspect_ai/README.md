@@ -16,26 +16,26 @@ However, there are some additional command line arguments that could be useful a
 
 - `--max-connections`: Maximum amount of API connections to the evaluated model.
 - `--limit`: Limit of the number of samples to evaluate in the SciCode dataset.
-- `-T input_path=<another_input_json_file>`: This is useful when user wants to change to another json dataset (e.g., the dev set).
+- `-T split=validation/test`: Whether the user wants to run on the small `validation` set (15 samples) or the large `test` set (65 samples).
 - `-T output_dir=<your_output_dir>`: This changes the default output directory (`./tmp`).
 - `-T h5py_file=<your_h5py_file>`: This is used if your h5py file is not downloaded in the recommended directory.
 - `-T with_background=True/False`: Whether to include problem background.
 - `-T mode=normal/gold/dummy`: This provides two additional modes for sanity checks.
     - `normal` mode is the standard mode to evaluate a model
-    - `gold` mode can only be used on the dev set which loads the gold answer
+    - `gold` mode can only be used on the validation set which loads the gold answer
     - `dummy` mode does not call any real LLMs and generates some dummy outputs
 
-For example, user can run five sames on the dev set with background as
+For example, user can run five samples on the validation set with background as
 
 ```bash
 inspect eval scicode.py \
     --model openai/gpt-4o \
     --temperature 0 \
     --limit 5 \
-    -T input_path=../data/problems_dev.jsonl \
-    -T output_dir=./tmp/dev \
+    -T split=validation \
+    -T output_dir=./tmp/val \
     -T with_background=True \
-    -T mode=gold
+    -T mode=normal
 ```
 
 User can run the evaluation on `Deepseek-v3` using together ai via the following command:

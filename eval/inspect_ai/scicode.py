@@ -5,7 +5,7 @@ import subprocess
 from typing import Any
 from pathlib import Path
 from inspect_ai import Task, task
-from inspect_ai.dataset import json_dataset, Sample
+from inspect_ai.dataset import Sample, hf_dataset
 from inspect_ai.solver import solver, TaskState, Generate
 from inspect_ai.scorer import scorer, mean, metric, Metric, Score, Target
 from scicode.parse.parse import extract_function_name, get_function_from_code
@@ -392,26 +392,26 @@ def scicode_scorer(**params: dict[str, Any]):
 
 @task
 def scicode(
-    input_path: str = '../data/problems_all.jsonl',
+    split: str = 'test',
     output_dir: str = './tmp',
     with_background: bool = False,
     h5py_file: str = '../data/test_data.h5',
     mode: str = 'normal',
 ):
-    dataset = json_dataset(
-        input_path, 
-        record_to_sample
+    
+    dataset =  hf_dataset(
+        'Zilinghan/scicode',
+        split=split,
+        sample_fields=record_to_sample,
     )
     return Task(
         dataset=dataset,
         solver=scicode_solver(
-            input_path=input_path,
             output_dir=output_dir,
             with_background=with_background,
             mode=mode,
         ),
         scorer=scicode_scorer(
-            input_path=input_path,
             output_dir=output_dir,
             with_background=with_background,
             h5py_file=h5py_file,
