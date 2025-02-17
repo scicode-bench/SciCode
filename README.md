@@ -7,7 +7,7 @@ This repo contains the evaluation code for the paper "[SciCode: A Research Codin
 
 ## 🔔News
 
-**[2025-02-17]: SciCode benchmark is available at [HuggingFace Datasets](https://huggingface.co/datasets/Zilinghan/scicode)!**
+**[2025-02-17]: SciCode benchmark is available at [HuggingFace Datasets](https://huggingface.co/datasets/SciCode1/SciCode)!**
 
 **[2025-02-01]: Results for DeepSeek-R1, DeepSeek-V3, and OpenAI o3-mini are added.**
 

@@ -400,7 +400,7 @@ def scicode(
 ):
     
     dataset =  hf_dataset(
-        'Zilinghan/scicode',
+        'SciCode1/SciCode',
         split=split,
         sample_fields=record_to_sample,
     )

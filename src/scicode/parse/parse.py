@@ -58,7 +58,7 @@ def read_from_jsonl(file_path):
     return data
 
 def read_from_hf_dataset(split='validation'):
-    dataset = load_dataset('Zilinghan/scicode', split=split)
+    dataset = load_dataset('SciCode1/SciCode', split=split)
     return dataset
 
 def rm_comments(string: str) -> str:
