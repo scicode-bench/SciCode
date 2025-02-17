@@ -32,12 +32,13 @@ dependencies = [
     "pytest",
     "pytest-cov",
     "litellm",
+    "inspect-ai",
+    "datasets",
     # requirements for execution
     "numpy",
     "scipy",
     "matplotlib",
     "sympy",
-    "inspect-ai",
 ]
 
 # Classifiers help users find your project by categorizing it.

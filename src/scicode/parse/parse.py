@@ -8,6 +8,7 @@ import h5py
 import scipy
 import numpy as np
 from sympy import Symbol
+from datasets import load_dataset
 
 OrderedContent = list[tuple[str, str]]
 
@@ -55,6 +56,10 @@ def read_from_jsonl(file_path):
         for line in file:
             data.append(json.loads(line.strip()))
     return data
+
+def read_from_hf_dataset(split='validation'):
+    dataset = load_dataset('SciCode1/SciCode', split=split)
+    return dataset
 
 def rm_comments(string: str) -> str:
     ret_lines = []

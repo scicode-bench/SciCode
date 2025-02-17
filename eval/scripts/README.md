@@ -23,19 +23,19 @@ TOGETHERAI_API_KEY = 'your_api_key'
 To generate code using the **Together AI** model (e.g., `Meta-Llama-3.1-70B-Instruct-Turbo`), go to the root of this repo and run:
 
 ```bash
-python eval/scripts/gencode_json.py --model litellm/together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo
+python eval/scripts/gencode.py --model litellm/together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo
 ```
 
 To generate code using **GPT-4o** (with default settings), go to the root of this repo and run:
 
 ```bash
-python eval/scripts/gencode_json.py --model gpt-4o
+python eval/scripts/gencode.py --model gpt-4o
 ```
 
 If you want to include **scientist-annotated background** in the prompts, use the `--with-background` flag:
 
 ```bash
-python eval/scripts/gencode_json.py --model gpt-4o --with-background
+python eval/scripts/gencode.py --model gpt-4o --with-background
 ```
 
 Please note that we do not plan to release the ground truth code for each problem to the public. However, we have made a dev set available that includes the ground truth code in `eval/data/problems_dev.jsonl`. 
@@ -44,11 +44,11 @@ In this repository, **we only support evaluating with previously generated code 
 
 ### Command-Line Arguments
 
-When running the `gencode_json.py` script, you can use the following options:
+When running the `gencode.py` script, you can use the following options:
 
 - `--model`: Specifies the model name to be used for generating code (e.g., `gpt-4o` or `litellm/together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo`).
+- `--split`: Specifies which problem split (either `validation` or `test`) to run on. 
 - `--output-dir`: Directory where the generated code outputs will be saved. Default is `eval_results/generated_code`.
-- `--input-path`: Directory containing the JSON files describing the problems. Default is `eval/data/problems_all.jsonl`.
 - `--prompt-dir`: Directory where prompt files are saved. Default is `eval_results/prompt`.
 - `--with-background`: If enabled, includes the problem background in the generated code.
 - `--temperature`: Controls the randomness of the output. Default is 0.
@@ -66,7 +66,7 @@ Download the [numeric test results](https://drive.google.com/drive/folders/1W5GZ
 To evaluate the generated code using a specific model, go to the root of this repo and use the following command:
 
 ```bash
-python eval/scripts/test_generated_code.py --model "model_name"
+python eval/scripts/test_generated_code.py --model "model_name" 
 ```
 
 Replace `"model_name"` with the appropriate model name, and include `--with-background` if the code is generated with **scientist-annotated background**.

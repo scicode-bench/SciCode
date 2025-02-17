@@ -7,7 +7,7 @@ import numpy as np
 import argparse
 
 from scicode.parse.parse import H5PY_FILE
-from scicode.parse.parse import read_from_jsonl
+from scicode.parse.parse import read_from_hf_dataset
 
 
 PROB_NUM = 80
@@ -20,16 +20,23 @@ def _get_background_dir(with_background):
     return "with_background" if with_background else "without_background"
 
 
-def test_code(model_name, code_dir, log_dir, output_dir,
-              jsonl_path, dev_set=False, with_background=False):
+def test_code(
+    model_name, 
+    split,
+    code_dir, 
+    log_dir, 
+    output_dir,
+    with_background=False
+):
 
-    jsonl_data = read_from_jsonl(jsonl_path)
+    scicode_data = read_from_hf_dataset(split)
+    scicode_data = [data for data in scicode_data]
     json_dct = {}
     json_idx = {}
 
-    for prob_data in jsonl_data:
+    for prob_data in scicode_data:
         json_dct[prob_data['problem_id']] = len(prob_data['sub_steps'])
-        json_idx[prob_data['problem_id']] = jsonl_data.index(prob_data)
+        json_idx[prob_data['problem_id']] = scicode_data.index(prob_data)
     start_time = time.time()
 
     code_dir_ = Path(code_dir, model_name, _get_background_dir(with_background))
@@ -44,7 +51,7 @@ def test_code(model_name, code_dir, log_dir, output_dir,
             file_step = file_name.split(".")[1]
 
             code_content = file_path.read_text(encoding='utf-8')
-            json_content = jsonl_data[json_idx[file_id]]
+            json_content = scicode_data[json_idx[file_id]]
             step_id = json_content["sub_steps"][int(file_step) - 1]["step_number"]
             test_lst = json_content["sub_steps"][int(file_step) - 1]["test_cases"]
             assert_file = Path(tmp_dir, f'{step_id}.py')
@@ -119,14 +126,14 @@ from scicode.parse.parse import process_hdf5_to_tuple
                            correct_prob[i] == tot_prob[i]
                            and tot_prob[i] != 0)
 
-    print(f'correct problems: {correct_prob_num}/{DEV_PROB_NUM if dev_set else PROB_NUM - DEV_PROB_NUM}')
-    print(f'correct steps: {len(correct_step)}/{DEV_STEP_NUM if dev_set else STEP_NUM}')
+    print(f'correct problems: {correct_prob_num}/{DEV_PROB_NUM if (split == "validation") else PROB_NUM - DEV_PROB_NUM}')
+    print(f'correct steps: {len(correct_step)}/{DEV_STEP_NUM if (split == "validation") else STEP_NUM}')
 
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     with open(f'{output_dir}/{model_name}_{_get_background_dir(with_background)}.txt', 'w') as f:
-        f.write(f'correct problems: {correct_prob_num}/{DEV_PROB_NUM if dev_set else PROB_NUM - DEV_PROB_NUM}\n')
-        f.write(f'correct steps: {len(correct_step)}/{DEV_STEP_NUM if dev_set else STEP_NUM}\n\n')
+        f.write(f'correct problems: {correct_prob_num}/{DEV_PROB_NUM if (split == "validation") else PROB_NUM - DEV_PROB_NUM}\n')
+        f.write(f'correct steps: {len(correct_step)}/{DEV_STEP_NUM if (split == "validation") else STEP_NUM}\n\n')
         f.write(f'duration: {test_time} seconds\n')
         f.write('\ncorrect problems: ')
         f.write(f'\n\n{[i + 1 for i in range(PROB_NUM) if correct_prob[i] == tot_prob[i] and tot_prob[i] != 0]}\n')
@@ -143,6 +150,13 @@ def get_cli() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--model", type=str, default="gpt-4o", help="Model name"
+    )
+    parser.add_argument(
+        "--split", 
+        type=str, 
+        default="test", 
+        choices=["validation", "test"],
+        help="Data split"
     )
     parser.add_argument(
         "--code-dir",
@@ -163,17 +177,6 @@ def get_cli() -> argparse.ArgumentParser:
         help="Eval results directory",
     )
     parser.add_argument(
-        "--jsonl-path",
-        type=Path,
-        default=Path("eval", "data", "problems_all.jsonl"),
-        help="Path to jsonl file",
-    )
-    parser.add_argument(
-        "--dev-set",
-        action='store_true',
-        help="Test dev set if enabled",
-    ),
-    parser.add_argument(
         "--with-background",
         action="store_true",
         help="Include problem background if enabled",
@@ -182,17 +185,16 @@ def get_cli() -> argparse.ArgumentParser:
 
 
 def main(model: str,
+         split: str,
          code_dir: Path,
          log_dir: Path,
          output_dir: Path,
-         jsonl_path: Path,
-         dev_set: bool,
          with_background: bool
 ) -> None:
     if not Path(H5PY_FILE).exists():
         raise FileNotFoundError("Please download the numeric test results before testing generated code.")
     model = Path(model).parts[-1]
-    test_code(model, code_dir, log_dir, output_dir, jsonl_path, dev_set, with_background)
+    test_code(model, split, code_dir, log_dir, output_dir, with_background)
 
 
 if __name__ == "__main__":
