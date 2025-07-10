@@ -6,7 +6,7 @@ from scicode.parse.parse import (
     get_function_from_code,
     read_from_hf_dataset,
 )
-from scicode.gen.models import extract_python_script, get_model_function
+from scicode.gen.models import extract_python_script, get_model_response
 
 DEFAULT_PROMPT_TEMPLATE = Path("eval", "data", "background_comment_template.txt").read_text()
 BACKGOUND_PROMPT_TEMPLATE = Path("eval", "data", "multistep_template.txt").read_text()
@@ -14,12 +14,11 @@ BACKGOUND_PROMPT_TEMPLATE = Path("eval", "data", "multistep_template.txt").read_
 
 class Gencode:
     def __init__(self, model: str, output_dir: Path,
-                 prompt_dir: Path, with_background: bool, temperature: float):
+                 prompt_dir: Path, with_background: bool):
         self.model = model
         self.output_dir = output_dir
         self.prompt_dir = prompt_dir
         self.with_background = with_background
-        self.temperature = temperature
         self.previous_llm_code = []
 
     def _get_background_dir(self):
@@ -90,13 +89,8 @@ class Gencode:
         if save:
             self.save_prompt_with_steps(prob_data, prompt, num_steps)
 
-        model_kwargs = {}
-        if "claude" in model:
-            model_kwargs["max_tokens"] = 4096
-        model_kwargs["temperature"] = self.temperature
         # write the response to a file if it doesn't exist
-        model_fct = get_model_function(model, **model_kwargs)
-        response_from_llm = model_fct(prompt)
+        response_from_llm = get_model_response(prompt, model=model)
         self.previous_llm_code[num_steps - 1] = extract_python_script(response_from_llm)
         self.save_response_with_steps(prob_data, response_from_llm, previous_code, num_steps)
 
@@ -174,12 +168,6 @@ def get_cli() -> argparse.ArgumentParser:
         action="store_true",
         help="Include problem background if enabled",
     )
-    parser.add_argument(
-        "--temperature",
-        type=float,
-        default=0,
-        help="Generation temperature",
-    )
     return parser
 
 
@@ -188,11 +176,10 @@ def main(model: str,
          output_dir: Path,
          prompt_dir: Path,
          with_background: bool,
-         temperature: float
 ) -> None:
     gcode = Gencode(
         model=model, output_dir=output_dir,
-        prompt_dir=prompt_dir,  with_background=with_background, temperature=temperature
+        prompt_dir=prompt_dir,  with_background=with_background
     )
     prompt_template = BACKGOUND_PROMPT_TEMPLATE if with_background else DEFAULT_PROMPT_TEMPLATE
     data = read_from_hf_dataset(split)
