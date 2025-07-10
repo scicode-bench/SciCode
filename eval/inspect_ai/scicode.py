@@ -343,8 +343,8 @@ def scicode_solver(**params: dict[str, Any]):
                     result = await generate(state=state_copy)
                     response_from_llm = result.output.completion
                     # ===Model Generation===
-                except:
-                    print(f"Failed to generate response for problem {prob_id} step {idx+1}.")
+                except Exception as e:
+                    print(f"Failed to generate response for problem {prob_id} step {idx+1}. Error: {e}")
                     response_from_llm = generate_dummy_response(prompt)
             prompt_assistant.register_previous_response(
                 prob_data=state.metadata,

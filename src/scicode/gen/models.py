@@ -22,16 +22,20 @@ def get_model_response(prompt: str, *, model: str) -> str:
         base_url="https://openrouter.ai/api/v1",
         api_key=key,
     )
-
-    completion = client.chat.completions.create(
-        model=model,
-        temperature=0,
-        max_tokens=4096,
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": prompt},
-        ],
-    )
+    try:
+        completion = client.chat.completions.create(
+            model=model,
+            temperature=0,
+            max_tokens=4096,
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": prompt},
+            ],
+        )
+    except Exception as e:
+        logger.error(f"Error calling OpenRouter API: {e}")
+        raise
+    
     return completion.choices[0].message.content
 
 
