@@ -4,15 +4,11 @@ This document provides an overview of the SciCode project, focusing on the suppo
 
 ## Supported Models
 
-The SciCode project supports a variety of Large Language Models through different providers. The core logic for model integration is located in `src/scicode/gen/models.py`.
+The SciCode project uses [OpenRouter](https://openrouter.ai/) to support a wide variety of Large Language Models. The core logic for model integration is located in `src/scicode/gen/models.py`.
 
-The following model providers are directly supported:
+Any model available through the OpenRouter API can be used by providing its model identifier (e.g., `openai/gpt-4o`, `anthropic/claude-3-opus`). For a list of available models, please refer to the [OpenRouter documentation](https://openrouter.ai/docs#models).
 
-*   **OpenAI:** Models with "gpt" in their name (e.g., `gpt-4o`, `gpt-4-turbo-2024-04-09`).
-*   **Anthropic:** Models with "claude" in their name (e.g., `claude-3-opus-20240229`).
-*   **Google:** Models with "gemini" in their name (e.g., `gemini-pro`).
-*   **LiteLLM:** A wide range of models can be used through LiteLLM by prefixing the model name with `litellm/`. For a list of models that have been evaluated with this benchmark, please refer to the leaderboard in the `README.md`.
-*   **Dummy:** A `dummy` model is available for testing purposes.
+A `dummy` model is also available for testing purposes.
 
 ## Running the Models
 
@@ -35,10 +31,10 @@ The recommended way to evaluate a new model is by using `inspect_ai`, as suggest
     Download the numeric test results from the link provided in the `README.md` and save them as `./eval/data/test_data.h5`.
 
 4.  **Configure API Keys:**
-    Create a configuration file at `~/.config/scicode/keys.cfg` and add your API keys. See the "Configuration" section below for more details.
+    Set your OpenRouter API key as an environment variable. See the "Configuration" section below for more details.
 
 5.  **Run the evaluation:**
-    You can run the evaluation using the `inspect` command. The model name should be in the format `<provider>/<model_name>`.
+    You can run the evaluation using the `inspect` command. The model name should be a valid OpenRouter model identifier.
 
     ```bash
     inspect eval eval/inspect_ai/scicode.py --model openai/gpt-4o --temperature 0
@@ -50,7 +46,7 @@ A deprecated two-step process is also available:
 
 1.  **Generate code:**
     ```bash
-    python eval/scripts/gencode.py --model <model_name>
+    python eval/scripts/gencode.py --model <openrouter_model_name>
     ```
 2.  **Test the generated code:**
     ```bash
@@ -59,19 +55,10 @@ A deprecated two-step process is also available:
 
 ## Configuration
 
-The API keys for the different model providers are managed in a configuration file located at `~/.config/scicode/keys.cfg`.
+To use the models, you need to set your OpenRouter API key as an environment variable.
 
-Create the directory and the file if they don't exist:
 ```bash
-mkdir -p ~/.config/scicode
-touch ~/.config/scicode/keys.cfg
+export OPENROUTER_KEY="your-openrouter-api-key"
 ```
 
-Then, add your API keys to the `keys.cfg` file in the following format:
-
-```
-OPENAI_KEY = "your-openai-api-key"
-ANTHROPIC_KEY = "your-anthropic-api-key"
-GOOGLE_KEY = "your-google-api-key"
-# Add other keys for LiteLLM as needed
-```
+You can add this line to your shell's startup file (e.g., `~/.bashrc` or `~/.zshrc`) to make it permanent.

@@ -1,18 +1,10 @@
 from openai import OpenAI
-import config
 import re
 import os
 
-from scicode import keys_cfg_path
 from scicode.utils.log import get_logger
 
 logger = get_logger("models")
-
-
-def get_config():
-    if not keys_cfg_path.exists():
-        raise FileNotFoundError(f"Config file not found: {keys_cfg_path}")
-    return config.Config(str(keys_cfg_path))
 
 
 def get_model_response(prompt: str, *, model: str) -> str:
@@ -20,10 +12,10 @@ def get_model_response(prompt: str, *, model: str) -> str:
     if model == "dummy":
         return generate_dummy_response(prompt)
 
-    key: str = get_config()["OPENROUTER_KEY"]  # type: ignore
+    key = os.getenv("OPENROUTER_KEY")
     if not key:
         raise ValueError(
-            "OPENROUTER_KEY not found in config file. Please add it to your keys.cfg."
+            "OPENROUTER_API_KEY environment variable not found. Please set it."
         )
 
     client = OpenAI(
@@ -63,4 +55,3 @@ def extract_python_script(response: str):
         r"^\s*(import .*|from .*\s+import\s+.*)", "", python_script, flags=re.MULTILINE
     )
     return python_script
-
