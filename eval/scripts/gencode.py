@@ -171,11 +171,12 @@ def get_cli() -> argparse.ArgumentParser:
     return parser
 
 
-def main(model: str,
-         split: str,
-         output_dir: Path,
-         prompt_dir: Path,
-         with_background: bool,
+def main(
+    model: str = "gpt-4o",
+    split: str = "test",
+    output_dir: Path = Path("eval_results", "generated_code"),
+    prompt_dir: Path = Path("eval_results", "prompt"),
+    with_background: bool = False,
 ) -> None:
     gcode = Gencode(
         model=model, output_dir=output_dir,
