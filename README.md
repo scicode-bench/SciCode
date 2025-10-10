@@ -68,9 +68,11 @@ Scicode has been integrated with `inspect_ai` for easier and faster model evalua
 
 ```bash
 cd eval/inspect_ai
-export OPENAI_API_KEY=your-openai-api-key
+export OPENROUTER_KEY=your-openrouter-api-key
 inspect eval scicode.py --model openai/gpt-4o --temperature 0
 ```
+
+The model name should be a valid [OpenRouter](https://openrouter.ai/docs#models) model identifier (e.g., `openai/gpt-4o`, `anthropic/claude-3-opus`, `google/gemini-pro`).
 
 💡 For more detailed information of using `inspect_ai`, see [`eval/inspect_ai` readme](eval/inspect_ai/)
 
