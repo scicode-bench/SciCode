@@ -59,7 +59,7 @@ SciCode sources challenging and realistic research-level coding problems across 
 ## Instructions to evaluate a new model using `inspect_ai` (recommended)
 
 
-Scicode has been integrated with `inspect_ai` for easier and faster model evaluation. You need to run the following steps ro run:
+Scicode has been integrated with `inspect_ai` for easier and faster model evaluation. You need to run the following steps to run:
 
 1. Clone this repository `git clone git@github.com:scicode-bench/SciCode.git`
 2. Install the `scicode` package with `pip install -e .`
