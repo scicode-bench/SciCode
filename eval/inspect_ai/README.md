@@ -2,7 +2,7 @@
 
 ### 1. Set Up Your API Keys
 
-Users can follow [`inspect_ai`'s official documentation](https://inspect.ai-safety-institute.org.uk/#getting-started) to setup correpsonding API keys depending on the types of models they would like to evaluate.
+Users can follow [`inspect_ai`'s official documentation](https://inspect.ai-safety-institute.org.uk/#getting-started) to setup corresponding API keys depending on the types of models they would like to evaluate.
 
 ### 2. Setup Command Line Arguments if Needed
 
