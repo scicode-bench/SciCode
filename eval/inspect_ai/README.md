@@ -25,7 +25,7 @@ However, there are some additional command line arguments that could be useful a
     - `gold` mode can only be used on the validation set which loads the gold answer
     - `dummy` mode does not call any real LLMs and generates some dummy outputs
 
-For example, user can run five samples on the validation set with background as
+For example, users can run five samples on the validation set with background as
 
 ```bash
 inspect eval scicode.py \
@@ -38,7 +38,7 @@ inspect eval scicode.py \
     -T mode=normal
 ```
 
-User can run the evaluation on `Deepseek-v3` using together ai via the following command:
+Users can run the evaluation on `Deepseek-v3` using Together AI via the following command:
 
 ```bash
 export TOGETHER_API_KEY=<YOUR_API_KEY>
@@ -55,7 +55,7 @@ For more information regarding `inspect_ai`, we refer users to its [official doc
 
 ### Extra: How SciCode are Evaluated Under the Hood?
 
-During the evaluation, the sub-steps of each main problem of SciCode are passed in order to the evalauted LLM with necessary prompts and LLM responses for previous sub-steps. The generated Python code from LLM will be parsed and saved to disk, which will be used to run on test cases to determine the pass or fail for the sub-steps. The main problem will be considered as solved if the LLM can pass all sub-steps of the main problem. 
+During the evaluation, the sub-steps of each main problem of SciCode are passed in order to the evaluated LLM with necessary prompts and LLM responses for previous sub-steps. The generated Python code from LLM will be parsed and saved to disk, which will be used to run on test cases to determine the pass or fail for the sub-steps. The main problem will be considered as solved if the LLM can pass all sub-steps of the main problem. 
 
 ### Extra: Reproducibility of `inspect_ai` Integration 
 We use the SciCode `inspect_ai` integration to evaluate OpenAI's GPT-4o, and we compare it with the original way of evaluation. Below shows the comparison of two ways of the evaluations. 

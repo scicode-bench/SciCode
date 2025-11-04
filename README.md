@@ -29,7 +29,7 @@ SciCode is a challenging benchmark designed to evaluate the capabilities of lang
 
 
 ## Dataset Creation
-SciCode sources challenging and realistic research-level coding problems across 6 natural science disciplines, covering a total of 16 subfields. Scicode mainly focuses on 1. Numerical methods 2.Simulation of systems 3. Scientific calculation. These are the tasks we believe require intense scientific knowledge and reasoning to optimally test LM’s science capability.
+SciCode sources challenging and realistic research-level coding problems across 6 natural science disciplines, covering a total of 16 subfields. SciCode mainly focuses on 1. Numerical methods 2. Simulation of systems 3. Scientific calculation. These are the tasks we believe require intense scientific knowledge and reasoning to optimally test LM’s science capability.
 
 ## 🏆 Leaderboard
 
@@ -59,12 +59,12 @@ SciCode sources challenging and realistic research-level coding problems across 
 ## Instructions to evaluate a new model using `inspect_ai` (recommended)
 
 
-Scicode has been integrated with `inspect_ai` for easier and faster model evaluation. You need to run the following steps to run:
+SciCode has been integrated with `inspect_ai` for easier and faster model evaluation. You need to run the following steps to run:
 
 1. Clone this repository `git clone git@github.com:scicode-bench/SciCode.git`
 2. Install the `scicode` package with `pip install -e .`
 3. Download the [numeric test results](https://drive.google.com/drive/folders/1W5GZW6_bdiDAiipuFMqdUhvUaHIj6-pR?usp=drive_link) and save them as `./eval/data/test_data.h5`
-4. Go to the `eval/inspect_ai` directory, setup correspoinding API key, and run the following command:
+4. Go to the `eval/inspect_ai` directory, set up the corresponding API key, and run the following command:
 
 ```bash
 cd eval/inspect_ai
