@@ -14,18 +14,26 @@ OrderedContent = list[tuple[str, str]]
 
 H5PY_FILE = "eval/data/test_data.h5"
 
+# The first line at column 0 that opens a `class` or a `def`. Anchoring to the
+# start of a line keeps docstring prose (several headers document a parameter as
+# `env: class Block`) from being read as the definition, and taking whichever
+# comes first keeps a class header from resolving to the `def` of its own first
+# method. `class Foo:` is matched as well as `class Foo(Base):`.
+_TOP_LEVEL_DEF = re.compile(
+    r'^(?:class\s+(\w+)\s*[(:]|def\s+(\w+)\s*\()', re.MULTILINE)
+
+
 def extract_function_name(function_header):
-    pattern = r'\bdef\s+(\w+)\s*\('
-    match = re.search(pattern, function_header)
+    """Return the name of the class or function a step's header declares.
+
+    A class-based header carries its first method too, so the class must win;
+    otherwise the caller extracts only that method and silently drops the rest
+    of the class from the code accumulated into later sub-steps.
+    """
+    match = _TOP_LEVEL_DEF.search(function_header)
     if match:
-        return match.group(1)
-    else:
-        pattern = r'\bclass\s+(\w+)\s*\('
-        match = re.search(pattern, function_header)
-        if match:
-            return match.group(1)
-        else:
-            raise ValueError('Function name or class name not found.')
+        return match.group(1) or match.group(2)
+    raise ValueError('Function name or class name not found.')
 
 def get_function_from_code(code_string, function_name):
     """
