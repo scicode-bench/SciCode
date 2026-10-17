@@ -58,14 +58,13 @@ def generate_openai_response(prompt: str, *, model="gpt-4-turbo-2024-04-09",
     return completion.choices[0].message.content
 
 
-def generate_anthropic_response(prompt, *, model="claude-3-opus-20240229",
+def generate_anthropic_response(prompt, *, model="claude-opus-4-8",
                                 max_tokens: int = 4096, temperature: float = 0) -> str:
     """call the anthropic api to generate a response"""
     key: str = get_config()["ANTHROPIC_KEY"]  # type: ignore
     client = anthropic.Anthropic(api_key=key)
     message = client.messages.create(
         model=model,
-        temperature=temperature,
         max_tokens=max_tokens,
         messages=[
             {"role": "user", "content": prompt},
