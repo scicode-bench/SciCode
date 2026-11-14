@@ -250,7 +250,7 @@ from scicode.parse.parse import process_hdf5_to_tuple
             except subprocess.TimeoutExpired:
                 return 2
             
-        total_steps = len(sub_steps)
+        total_steps = 0
         total_correct = 0
         for idx in range(len(sub_steps)):
             if (
@@ -260,6 +260,7 @@ from scicode.parse.parse import process_hdf5_to_tuple
             ):
                 continue
             step_id = sub_steps[idx]["step_number"]
+            total_steps += 1
             script_path = Path(tmp_dir, f'{step_id}.py')
             logs_dir = Path(
                 self.log_dir,
