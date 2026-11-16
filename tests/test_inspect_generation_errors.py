@@ -7,10 +7,9 @@ from pathlib import Path
 import sys
 
 import pytest
-from inspect_ai import eval as inspect_eval, eval_retry
+from inspect_ai import eval as inspect_eval
 from inspect_ai.dataset import Sample
-from inspect_ai.model import ModelOutput, get_model
-from inspect_ai.log import read_eval_log
+from inspect_ai.model import get_model
 
 
 @pytest.fixture
