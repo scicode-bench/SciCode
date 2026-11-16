@@ -1,5 +1,6 @@
 from pathlib import Path
 import json
+import re
 import subprocess
 import time
 import shutil
@@ -20,13 +21,19 @@ def _get_background_dir(with_background):
     return "with_background" if with_background else "without_background"
 
 
+def _run_root_from_generated_dir(generated_dir: Path) -> Path:
+    """Parent of model folder: .../<run>/<model>/with_background -> <run>."""
+    return generated_dir.parent.parent
+
+
 def test_code(
-    model_name, 
+    model_name,
     split,
-    code_dir, 
-    log_dir, 
+    code_dir,
+    log_dir,
     output_dir,
-    with_background=False
+    with_background=False,
+    generated_dir: Path | None = None,
 ):
 
     scicode_data = read_from_hf_dataset(split)
@@ -39,7 +46,10 @@ def test_code(
         json_idx[prob_data['problem_id']] = scicode_data.index(prob_data)
     start_time = time.time()
 
-    code_dir_ = Path(code_dir, model_name, _get_background_dir(with_background))
+    if generated_dir is not None:
+        code_dir_ = Path(generated_dir)
+    else:
+        code_dir_ = Path(code_dir, model_name, _get_background_dir(with_background))
     tmp_dir = Path(f'tmp_{start_time}')
 
     tmp_dir.mkdir(parents=True, exist_ok=True)
@@ -47,9 +57,13 @@ def test_code(
     for file_path in code_dir_.iterdir():
         if file_path.is_file():
             file_name = file_path.stem
-            file_id = file_name.split(".")[0]
-            file_step = file_name.split(".")[1]
+            m = re.fullmatch(r"(\d+)\.(\d+)", file_name)
+            if not m:
+                continue
+            file_id, file_step = m.group(1), m.group(2)
 
+            if file_id not in json_idx:
+                continue
             code_content = file_path.read_text(encoding='utf-8')
             json_content = scicode_data[json_idx[file_id]]
             step_id = json_content["sub_steps"][int(file_step) - 1]["step_number"]
@@ -140,61 +154,56 @@ from scicode.parse.parse import process_hdf5_to_tuple
 
     with open(f'{output_dir}/{model_name}_{_get_background_dir(with_background)}.json', 'w', encoding='utf-8') as f:
         json.dump(correct_dict, f, indent=4)
-    
+
     shutil.rmtree(tmp_dir)
 
 
 def get_cli() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-    )
-    parser.add_argument(
-        "--model", type=str, default="gpt-4o", help="Model name"
-    )
-    parser.add_argument(
-        "--split", 
-        type=str, 
-        default="test", 
-        choices=["validation", "test"],
-        help="Data split"
-    )
-    parser.add_argument(
-        "--code-dir",
-        type=Path,
-        default=Path("eval_results", "generated_code"),
-        help="Code directory",
-    )
-    parser.add_argument(
-        "--log-dir",
-        type=Path,
-        default=Path("logs"),
-        help="Log directory",
-    )
-    parser.add_argument(
-        "--output-dir",
-        type=Path,
-        default=Path("eval_results"),
-        help="Eval results directory",
-    )
-    parser.add_argument(
-        "--with-background",
-        action="store_true",
-        help="Include problem background if enabled",
-    )
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--model", type=str, default="gpt-4o", help="Model name")
+    parser.add_argument("--split", type=str, default="test",
+                        choices=["validation", "test"], help="Data split")
+    parser.add_argument("--code-dir", type=Path, default=Path("eval_results", "generated_code"),
+                        help="Code directory")
+    parser.add_argument("--log-dir", type=Path, default=None,
+                        help="Root directory for per-step pass/fail logs. "
+                        "Default: ./logs; with --generated-dir, defaults to <run>/logs.")
+    parser.add_argument("--output-dir", type=Path, default=Path("eval_results"),
+                        help="Eval results directory")
+    parser.add_argument("--with-background", action="store_true",
+                        help="Include problem background")
+    parser.add_argument("--generated-dir", type=Path, default=None,
+                        help="Full path to generated code dir "
+                        "(e.g. eval_results/20260417_test/qwen3.5/with_background). "
+                        "When set, --code-dir/--model/--with-background are inferred from path.")
     return parser
 
 
 def main(model: str,
          split: str,
          code_dir: Path,
-         log_dir: Path,
+         log_dir: Path | None,
          output_dir: Path,
-         with_background: bool
+         with_background: bool,
+         generated_dir: Path | None = None,
 ) -> None:
     if not Path(H5PY_FILE).exists():
         raise FileNotFoundError("Please download the numeric test results before testing generated code.")
-    model = Path(model).parts[-1]
-    test_code(model, split, code_dir, log_dir, output_dir, with_background)
+
+    if generated_dir is not None:
+        generated_dir = Path(generated_dir)
+        background_part = generated_dir.name
+        with_background = (background_part == "with_background")
+        model = generated_dir.parent.name
+        if log_dir is None:
+            log_dir = _run_root_from_generated_dir(generated_dir) / "logs"
+    else:
+        model = Path(model).parts[-1]
+        if log_dir is None:
+            log_dir = Path("logs")
+
+    print(f"Log directory (root): {log_dir.resolve()}")
+    test_code(model, split, code_dir, log_dir, output_dir, with_background, generated_dir)
 
 
 if __name__ == "__main__":

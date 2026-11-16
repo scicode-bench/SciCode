@@ -5,91 +5,118 @@
 
 This repo contains the evaluation code for the paper "[SciCode: A Research Coding Benchmark Curated by Scientists](https://arxiv.org/abs/2407.13168)"
 
-## 🔔News
-
-**[2025-02-17]: SciCode benchmark is available at [HuggingFace Datasets](https://huggingface.co/datasets/SciCode1/SciCode)!**
-
-**[2025-02-01]: Results for DeepSeek-R1, DeepSeek-V3, and OpenAI o3-mini are added.**
-
-**[2025-01-24]: SciCode has been integrated with [`inspect_ai`](https://inspect.ai-safety-institute.org.uk/) for easier and faster model evaluations.**
-
-**[2024-11-04]: Leaderboard is on! Check [here](https://scicode-bench.github.io/leaderboard/). We have also added Claude Sonnet 3.5 (new) results.**
-
-**[2024-10-01]: We have added OpenAI o1-mini and o1-preview results.**
-
-**[2024-09-26]: SciCode is accepted at NeurIPS D&B Track 2024.**
-
-**[2024-08-22]: The SciCode benchmark has been successfully integrated into [OpenCompass](https://github.com/open-compass/opencompass).**
-
-**[2024-07-24]: We add the scientist-annotated background and support setup for w/ background evaluation.**
-
-## Introduction
-SciCode is a challenging benchmark designed to evaluate the capabilities of language models (LMs) in generating code for solving realistic scientific research problems. It has a diverse coverage of **16** subdomains from **5** domains: Physics, Math, Material Science, Biology, and Chemistry. Unlike previous benchmarks that consist of exam-like question-answer pairs, SciCode is converted from real research problems. SciCode problems naturally factorize into multiple subproblems, each involving knowledge recall, reasoning, and code synthesis. In total, SciCode contains **338** subproblems decomposed from **80** challenging main problems, and it offers optional descriptions specifying useful scientific background information and scientist-annotated gold-standard solutions and test cases for evaluation. OpenAI o1-preview, the best-performing model among those tested, can solve only **7.7%** of the problems in the most realistic setting. Broadly, SciCode demonstrates a realistic and scientists' everyday workflow of identifying critical science concepts and facts and then transforming them into computation and simulation code. We believe SciCode not only helps demonstrate contemporary LLMs' progress towards helpful assistant for scientists but also helps shed light on future building and evaluation of scientific AI.
-
-
-
-## Dataset Creation
-SciCode sources challenging and realistic research-level coding problems across 6 natural science disciplines, covering a total of 16 subfields. Scicode mainly focuses on 1. Numerical methods 2.Simulation of systems 3. Scientific calculation. These are the tasks we believe require intense scientific knowledge and reasoning to optimally test LM’s science capability.
-
-## 🏆 Leaderboard
-
-| Models                   | Main Problem Resolve Rate           | <span style="color:grey">Subproblem</span>            |
-|--------------------------|-------------------------------------|-------------------------------------|
-| 🥇 OpenAI o3-mini-low    | <div align="center">**10.8**</div>      | <div align="center" style="color:grey">33.3</div>     |
-| 🥈 OpenAI o3-mini-high   | <div align="center">**9.2**</div>       | <div align="center" style="color:grey">34.4</div>     |
-| 🥉 OpenAI o3-mini-medium | <div align="center">**9.2**</div>       | <div align="center" style="color:grey">33.0</div>     |
-| OpenAI o1-preview        | <div align="center">**7.7**</div>       | <div align="center" style="color:grey">28.5</div>     |
-| Deepseek-R1              | <div align="center">**4.6**</div>       | <div align="center" style="color:grey">28.5</div>     |
-| Claude3.5-Sonnet         | <div align="center">**4.6**</div>       | <div align="center" style="color:grey">26.0</div>     |
-| Claude3.5-Sonnet (new)   | <div align="center">**4.6**</div>       | <div align="center" style="color:grey">25.3</div>     |
-| Deepseek-v3              | <div align="center">**3.1**</div>       | <div align="center" style="color:grey">23.7</div>     |
-| Deepseek-Coder-v2        | <div align="center">**3.1**</div>       | <div align="center" style="color:grey">21.2</div>     |
-| GPT-4o                   | <div align="center">**1.5**</div>       | <div align="center" style="color:grey">25.0</div>     |
-| GPT-4-Turbo              | <div align="center">**1.5**</div>       | <div align="center" style="color:grey">22.9</div>     |
-| OpenAI o1-mini           | <div align="center">**1.5**</div>       | <div align="center" style="color:grey">22.2</div>     |
-| Gemini 1.5 Pro           | <div align="center">**1.5**</div>       | <div align="center" style="color:grey">21.9</div>     |
-| Claude3-Opus             | <div align="center">**1.5**</div>       | <div align="center" style="color:grey">21.5</div>     |
-| Llama-3.1-405B-Chat      | <div align="center">**1.5**</div>       | <div align="center" style="color:grey">19.8</div>     |
-| Claude3-Sonnet           | <div align="center">**1.5**</div>       | <div align="center" style="color:grey">17.0</div>     |
-| Qwen2-72B-Instruct       | <div align="center">**1.5**</div>       | <div align="center" style="color:grey">17.0</div>     |
-| Llama-3.1-70B-Chat       | <div align="center">**0.0**</div>       | <div align="center" style="color:grey">17.0</div>     |
-| Mixtral-8x22B-Instruct   | <div align="center">**0.0**</div>       | <div align="center" style="color:grey">16.3</div>     |
-| Llama-3-70B-Chat         | <div align="center">**0.0**</div>       | <div align="center" style="color:grey">14.6</div>     |
-
-## Instructions to evaluate a new model using `inspect_ai` (recommended)
-
-
-Scicode has been integrated with `inspect_ai` for easier and faster model evaluation. You need to run the following steps ro run:
-
-1. Clone this repository `git clone git@github.com:scicode-bench/SciCode.git`
-2. Install the `scicode` package with `pip install -e .`
-3. Download the [numeric test results](https://drive.google.com/drive/folders/1W5GZW6_bdiDAiipuFMqdUhvUaHIj6-pR?usp=drive_link) and save them as `./eval/data/test_data.h5`
-4. Go to the `eval/inspect_ai` directory, setup correspoinding API key, and run the following command:
+## Setup
 
 ```bash
-cd eval/inspect_ai
-export OPENAI_API_KEY=your-openai-api-key
-inspect eval scicode.py --model openai/gpt-4o --temperature 0
+git clone <this-repo>
+cd SciCode
+uv sync
+source .venv/bin/activate
 ```
 
-💡 For more detailed information of using `inspect_ai`, see [`eval/inspect_ai` readme](eval/inspect_ai/)
+Download the numeric test data and place it at `eval/data/test_data.h5`:
+- [Google Drive](https://drive.google.com/drive/folders/1W5GZW6_bdiDAiipuFMqdUhvUaHIj6-pR?usp=drive_link)
 
-## Instructions to evaluate a new model in two steps (deprecated)
+The problem datasets (`problems_dev.jsonl`, `problems_test.jsonl`) are already included in `eval/data/`.
 
-It should be noted that this is a deprecated way to evaluating models, and using `inspect_ai` is the recommended way. Please use this method only if `inspect_ai` does not work for your need. You need to run the first three steps in the above section, then run the following two commands:
+## Step 1 — Generate code
 
-4. Run `eval/scripts/gencode.py` to generate new model outputs (see the [`eval/scripts` readme](eval/scripts/)) for more information
-5. Run `eval/scripts/test_generated_code.py` to evaluate the unittests
+```bash
+uv run python eval/scripts/gencode.py \
+  --model <model-name> \
+  --api-key <your-api-key> \
+  --base-url <api-base-url> \
+  --split test \
+  --with-background \
+  --output-dir eval_results/my_run \
+  --num-workers 16 \
+  --max-tokens 65536 \
+  --timeout 600 \
+  --repetition-penalty 1.1
+```
 
-## More information and FAQ
+**Key parameters:**
 
-More information, including a [FAQ section](https://scicode-bench.github.io/faq/), is provided on our [website](https://scicode-bench.github.io/).
-If you have trouble reaching the website, please find the markdown source in its [github repository](https://github.com/scicode-bench/scicode-bench.github.io/tree/main/docs).
+| Parameter | Default | Description |
+|---|---|---|
+| `--model` | `gpt-4o` | Model name passed to the API |
+| `--api-key` | `""` | API key for the model service |
+| `--base-url` | `None` | Base URL for OpenAI-compatible endpoints (e.g. Bailian, vLLM) |
+| `--split` | `test` | Dataset split: `test` (65 problems) or `validation` (15 problems) |
+| `--with-background` | off | Include scientist-annotated background in the prompt |
+| `--output-dir` | auto timestamp | Where to save generated `.py` files; fixed name enables resume |
+| `--num-workers` | `8` | Parallel threads (one per problem) |
+| `--max-tokens` | `4096` | Max tokens per generation |
+| `--timeout` | `180` | HTTP timeout per API call in seconds |
+| `--repetition-penalty` | `None` | Repetition penalty (supported by vLLM / Bailian backends) |
+| `--temperature` | `0` | Sampling temperature |
+| `--problem-id` | `None` | Run a single problem by ID |
 
-## Contact
-- Minyang Tian: mtian8@illinois.edu
-- Eliu Huerta: elihu@anl.gov
-- Hao Peng: haopeng@illinois.edu
+**Output structure:**
+
+```
+eval_results/my_run/
+  <model-name>/
+    with_background/
+      1.1.py   # problem 1, step 1
+      1.2.py   # problem 1, step 2
+      ...
+      generation_logs/
+        1.1.log  # full prompt + raw response per step
+  prompt/
+    <model-name>/with_background/
+      1.1.txt  # prompt sent to model
+```
+
+**Resume support:** re-run with the same `--output-dir` and already-generated files are skipped automatically.
+
+**Example (Qwen via Bailian):**
+
+```bash
+uv run python eval/scripts/gencode.py \
+  --model qwen3.5-122b-a10b \
+  --api-key "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" \
+  --base-url https://dashscope.aliyuncs.com/compatible-mode/v1 \
+  --max-tokens 65536 \
+  --split test \
+  --with-background \
+  --num-workers 16 \
+  --repetition-penalty 1.1 \
+  --timeout 600 \
+  --output-dir eval_results/my_run_test
+```
+
+## Step 2 — Evaluate
+
+```bash
+bash evalcode.sh <generated_dir> [split]
+```
+
+`<generated_dir>` is the path ending in `with_background` or `without_background`, e.g.:
+
+```bash
+bash evalcode.sh eval_results/my_run_test/qwen3.5-122b-a10b/with_background test
+```
+
+Or call the script directly:
+
+```bash
+uv run python eval/scripts/test_generated_code.py \
+  --generated-dir eval_results/my_run_test/qwen3.5-122b-a10b/with_background \
+  --split test \
+  --output-dir eval_results/my_run_test
+```
+
+**Eval output:**
+
+```
+eval_results/my_run_test/
+  qwen3.5-122b-a10b_with_background.txt   # summary: correct problems / steps
+  qwen3.5-122b-a10b_with_background.json  # per-problem pass/fail detail
+  logs/
+    qwen3.5-122b-a10b/with_background/
+      1.1.txt  # "pass" / "fail" / "time out" per step
+```
 
 ## Citation
 ```bibtex

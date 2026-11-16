@@ -3,16 +3,21 @@ from __future__ import annotations
 import ast
 import json
 import re
+from pathlib import Path
 
 import h5py
 import scipy
 import numpy as np
 from sympy import Symbol
-from datasets import load_dataset
 
 OrderedContent = list[tuple[str, str]]
 
-H5PY_FILE = "eval/data/test_data.h5"
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+_EVAL_DATA = _REPO_ROOT / "eval" / "data"
+
+H5PY_FILE = str(_EVAL_DATA / "test_data.h5")
+
+SCICODE_LOCAL_DATASET_DIR = _EVAL_DATA
 
 def extract_function_name(function_header):
     pattern = r'\bdef\s+(\w+)\s*\('
@@ -58,8 +63,16 @@ def read_from_jsonl(file_path):
     return data
 
 def read_from_hf_dataset(split='validation'):
-    dataset = load_dataset('SciCode1/SciCode', split=split)
-    return dataset
+    split_to_file = {
+        'validation': SCICODE_LOCAL_DATASET_DIR / 'problems_dev.jsonl',
+        'test': SCICODE_LOCAL_DATASET_DIR / 'problems_test.jsonl',
+    }
+    path = split_to_file.get(split)
+    if path is None:
+        raise ValueError(f'Unknown split: {split}')
+    if not path.is_file():
+        raise FileNotFoundError(f'SciCode data file not found: {path}')
+    return read_from_jsonl(path)
 
 def rm_comments(string: str) -> str:
     ret_lines = []

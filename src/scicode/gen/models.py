@@ -1,135 +1,124 @@
-from functools import partial
-from openai import OpenAI
-import anthropic
-import google.generativeai as genai
-import config
-import re
-import os
-import litellm
-from litellm.utils import validate_environment as litellm_validate_environment
+from __future__ import annotations
 
-from scicode import keys_cfg_path
+from functools import partial
+import re
+
+from openai import OpenAI
 from scicode.utils.log import get_logger
+from scicode.gen.token_records import record_response
 
 logger = get_logger("models")
 
 
-def get_config():
-    if not keys_cfg_path.exists():
-        raise FileNotFoundError(f"Config file not found: {keys_cfg_path}")
-    return config.Config(str(keys_cfg_path))
+def generate_openai_compatible_response(
+    prompt: str,
+    *,
+    model: str,
+    api_key: str,
+    base_url: str | None = None,
+    max_tokens: int = 4096,
+    temperature: float = 0,
+    timeout: float = 3600.0,
+    repetition_penalty: float | None = None,
+    stream: bool = False,
+    api_type: str = "chat_completions",
+    extra_body: dict | None = None,
+    sample_id: str | None = None,
+) -> str:
+    """Call any OpenAI-compatible API (OpenAI, Bailian, local vLLM, etc.)"""
+    client = OpenAI(api_key=api_key, base_url=base_url, timeout=timeout)
+    api_type = (api_type or "chat_completions").lower()
+    request_extra_body = dict(extra_body or {})
+    if 'gpt' in model and not request_extra_body:
+        request_extra_body["reasoning_effort"] = "xhigh"
+    if repetition_penalty is not None:
+        request_extra_body["repetition_penalty"] = repetition_penalty
 
-def generate_litellm_response(prompt: str, *, model: str, **kwargs) -> str:
-    """Call the litellm api to generate a response"""
-    # litellm expects all keys as env variables
-    config = get_config()
-    for key, value in config.as_dict().items():
-        if key in os.environ and os.environ[key] != value:
-            logger.warning(f"Overwriting {key} from config with environment variable")
-        else:
-            os.environ[key] = value
-    # Let's validate that we have everythong for this model
-    env_validation = litellm_validate_environment(model)
-    if not env_validation.get("keys_in_environment") or env_validation.get("missing_keys", []):
-        msg = f"Environment validation for litellm failed for model {model}: {env_validation}"
-        raise ValueError(msg)
-    response = litellm.completion(
-        model=model,
-        messages = [
-            {"role": "user", "content": prompt},
-        ],
-        **kwargs,
-    )
-    return response.choices[0].message.content
-
-def generate_openai_response(prompt: str, *, model="gpt-4-turbo-2024-04-09",
-                             temperature: float = 0) -> str:
-    """call the openai api to generate a response"""
-    key: str = get_config()["OPENAI_KEY"]  # type: ignore
-    client = OpenAI(api_key=key)
-    completion = client.chat.completions.create(
-        model=model,
-        temperature=temperature,
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": prompt},
-        ],
-    )
-    return completion.choices[0].message.content
-
-
-def generate_anthropic_response(prompt, *, model="claude-3-opus-20240229",
-                                max_tokens: int = 4096, temperature: float = 0) -> str:
-    """call the anthropic api to generate a response"""
-    key: str = get_config()["ANTHROPIC_KEY"]  # type: ignore
-    client = anthropic.Anthropic(api_key=key)
-    message = client.messages.create(
-        model=model,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        messages=[
-            {"role": "user", "content": prompt},
-        ],
-    )
-    return message.content[0].text
-
-
-def generate_google_response(prompt: str, *, model: str = "gemini-pro",
-                             temperature: float = 0) -> str:
-    """call the api to generate a response"""
-    key: str = get_config()["GOOGLE_KEY"]  # type: ignore
-    genai.configure(api_key=key)
-    model = genai.GenerativeModel(model_name=model)
-    response = model.generate_content(prompt,
-                                      generation_config=genai.GenerationConfig(temperature=temperature),
-                                      # safety_settings=[
-                                      #     {
-                                      #         "category": "HARM_CATEGORY_HARASSMENT",
-                                      #         "threshold": "BLOCK_NONE",
-                                      #     },
-                                      #     {
-                                      #         "category": "HARM_CATEGORY_HATE_SPEECH",
-                                      #         "threshold": "BLOCK_NONE",
-                                      #     },
-                                      #     {
-                                      #         "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                                      #         "threshold": "BLOCK_NONE",
-                                      #     },
-                                      #     {
-                                      #         "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-                                      #         "threshold": "BLOCK_NONE"
-                                      #     }
-                                      # ]
-                                      )
-    try:
-        return response.text
-    except ValueError:
-        print(f'prompt:\n{prompt}')
-        # If the response doesn't contain text, check if the prompt was blocked.
-        print(f'prompt feedback:\n{response.prompt_feedback}')
-        # Also check the finish reason to see if the response was blocked.
-        print(f'finish reason:\n{response.candidates[0].finish_reason.name}')
-        # If the finish reason was SAFETY, the safety ratings have more details.
-        print(f'safety rating:\n{response.candidates[0].safety_ratings}')
-        raise ValueError("Generate response failed.")
-
-
-def get_model_function(model: str, **kwargs):
-    """Return the appropriate function to generate a response based on the model"""
-    if model.startswith("litellm/"):
-        model = model.removeprefix("litellm/")
-        fct = generate_litellm_response
-    elif "gpt" in model:
-        fct = generate_openai_response
-    elif "claude" in model:
-        fct = generate_anthropic_response
-    elif "gemini" in model:
-        fct = generate_google_response
-    elif model == "dummy":
-        fct = generate_dummy_response
+    create_kwargs: dict = {
+        "model": model,
+        "temperature": temperature,
+    }
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": prompt},
+    ]
+    if api_type == "responses":
+        create_kwargs["input"] = messages
+        create_kwargs["max_output_tokens"] = max_tokens
     else:
-        raise ValueError(f"Model {model} not supported")
-    return partial(fct, model=model, **kwargs)
+        create_kwargs["messages"] = messages
+        create_kwargs["max_tokens"] = max_tokens
+    if request_extra_body:
+        create_kwargs["extra_body"] = request_extra_body
+
+    if stream:
+        create_kwargs["stream"] = True
+        pieces: list[str] = []
+        reasoning_pieces: list[str] = []
+        stream_usage = None
+        if api_type == "responses":
+            completion = client.responses.create(**create_kwargs)
+            for event in completion:
+                event_type = getattr(event, "type", "")
+                if event_type == "response.output_text.delta":
+                    pieces.append(getattr(event, "delta", "") or "")
+                elif "reasoning" in event_type and event_type.endswith(".delta"):
+                    reasoning_pieces.append(getattr(event, "delta", "") or "")
+                elif event_type in {"response.completed", "response.incomplete"}:
+                    response = getattr(event, "response", None)
+                    stream_usage = getattr(response, "usage", None)
+        else:
+            create_kwargs["stream_options"] = {"include_usage": True}
+            completion = client.chat.completions.create(**create_kwargs)
+            for chunk in completion:
+                if getattr(chunk, "usage", None):
+                    stream_usage = chunk.usage
+                if not chunk.choices:
+                    continue
+                delta = chunk.choices[0].delta
+                piece = getattr(delta, "content", None)
+                if piece:
+                    pieces.append(piece)
+                r_piece = getattr(delta, "reasoning_content", None) or getattr(delta, "reasoning", None)
+                if r_piece:
+                    reasoning_pieces.append(r_piece)
+        text = "".join(pieces)
+        reasoning_text = "".join(reasoning_pieces) or None
+        record_response(stream_usage, text=text, reasoning_text=reasoning_text, sample_id=sample_id)
+        return text
+
+    if api_type == "responses":
+        completion = client.responses.create(**create_kwargs)
+        text = getattr(completion, "output_text", None)
+        reasoning_parts: list[str] = []
+        if not text:
+            answer_parts: list[str] = []
+            for item in getattr(completion, "output", []) or []:
+                item_type = getattr(item, "type", "")
+                if item_type == "message":
+                    for content in getattr(item, "content", []) or []:
+                        content_type = getattr(content, "type", "")
+                        if content_type in {"output_text", "text"}:
+                            content_text = getattr(content, "text", None)
+                            if content_text:
+                                answer_parts.append(content_text)
+                elif item_type == "reasoning":
+                    for summary in getattr(item, "summary", []) or []:
+                        summary_text = getattr(summary, "text", None)
+                        if summary_text:
+                            reasoning_parts.append(summary_text)
+            text = "".join(answer_parts)
+        reasoning_text = "\n".join(reasoning_parts) or None
+        text = text or ""
+        record_response(getattr(completion, "usage", None), text=text, reasoning_text=reasoning_text, sample_id=sample_id)
+        return text
+
+    completion = client.chat.completions.create(**create_kwargs)
+    msg = completion.choices[0].message
+    text = msg.content or ""
+    reasoning_text = getattr(msg, "reasoning_content", None) or getattr(msg, "reasoning", None)
+    record_response(getattr(completion, "usage", None), text=text, reasoning_text=reasoning_text, sample_id=sample_id)
+    return text
 
 
 def generate_dummy_response(prompt: str, **kwargs) -> str:
@@ -137,13 +126,51 @@ def generate_dummy_response(prompt: str, **kwargs) -> str:
     return "Blah blah\n```python\nprint('Hello, World!')\n```\n"
 
 
-def extract_python_script(response: str):
-    # We will extract the python script from the response
+def get_model_function(
+    model: str,
+    *,
+    api_key: str,
+    base_url: str | None = None,
+    max_tokens: int = 4096,
+    temperature: float = 0,
+    timeout: float = 3600.0,
+    repetition_penalty: float | None = None,
+    stream: bool = False,
+    api_type: str = "chat_completions",
+    extra_body: dict | None = None,
+    **kwargs,
+):
+    """Return a callable (prompt: str) -> str for the given model."""
+    if model == "dummy":
+        return partial(generate_dummy_response, model=model)
+
+    return partial(
+        generate_openai_compatible_response,
+        model=model,
+        api_key=api_key,
+        base_url=base_url,
+        max_tokens=max_tokens,
+        temperature=temperature,
+        timeout=timeout,
+        repetition_penalty=repetition_penalty,
+        stream=stream,
+        api_type=api_type,
+        extra_body=extra_body,
+        **kwargs,
+    )
+
+
+def extract_python_script(response: str) -> str:
     if '```' in response:
-        python_script = response.split("```python")[1].split("```")[0] if '```python' in response else response.split('```')[1].split('```')[0]
+        python_script = (
+            response.split("```python")[1].split("```")[0]
+            if '```python' in response
+            else response.split('```')[1].split('```')[0]
+        )
     else:
         print("Fail to extract python code from specific format.")
         python_script = response
-    python_script = re.sub(r'^\s*(import .*|from .*\s+import\s+.*)', '', python_script, flags=re.MULTILINE)
+    python_script = re.sub(
+        r'^\s*(import .*|from .*\s+import\s+.*)', '', python_script, flags=re.MULTILINE
+    )
     return python_script
-
