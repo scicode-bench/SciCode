@@ -7,7 +7,9 @@ from pathlib import Path
 from inspect_ai import Task, task
 from inspect_ai.dataset import Sample, hf_dataset
 from inspect_ai.solver import solver, TaskState, Generate
-from inspect_ai.scorer import scorer, mean, metric, Metric, SampleScore, Target
+from inspect_ai.model import get_model
+from inspect_ai.scorer import scorer, mean, metric, Metric, SampleScore, Score, Target
+from scicode.gen.streaming import enable_streaming
 from scicode.parse.parse import extract_function_name, get_function_from_code
 from scicode.gen.models import generate_dummy_response, extract_python_script
 
@@ -309,6 +311,8 @@ def generate_gold_response(prob_data: dict, num_steps: int):
 @solver
 def scicode_solver(**params: dict[str, Any]):
     async def solve(state: TaskState, generate: Generate) -> TaskState:
+        if params.get("stream", True) and params["mode"] == "normal":
+            enable_streaming(get_model())
         model_name = str(state.model).replace("/", "-")
         prompt_assistant = ScicodePromptingAssistant(
             output_dir=Path(params["output_dir"], model_name, "generated_code"),
@@ -343,7 +347,14 @@ def scicode_solver(**params: dict[str, Any]):
                     result = await generate(state=state_copy)
                     response_from_llm = result.output.completion
                     # ===Model Generation===
-                except:
+                except Exception as exc:
+                    if params.get("stop_on_generation_error", False):
+                        state.metadata.setdefault("scicode_generation_errors", []).append({
+                            "step": idx + 1, "type": type(exc).__name__, "message": str(exc),
+                        })
+                        raise RuntimeError(
+                            f"Problem {prob_id} step {idx + 1} generation failed: {type(exc).__name__}: {exc}"
+                        ) from exc
                     response_from_llm = generate_dummy_response(prompt)
             prompt_assistant.register_previous_response(
                 prob_data=state.metadata,
@@ -396,6 +407,8 @@ def scicode(
     with_background: bool = False,
     h5py_file: str = '../data/test_data.h5',
     mode: str = 'normal',
+    stream: bool = True,
+    stop_on_generation_error: bool = False,
 ):
     
     dataset =  hf_dataset(
@@ -405,10 +418,14 @@ def scicode(
     )
     return Task(
         dataset=dataset,
+        **({"fail_on_error": True, "score_on_error": False}
+           if stop_on_generation_error else {}),
         solver=scicode_solver(
             output_dir=output_dir,
             with_background=with_background,
             mode=mode,
+            stream=stream,
+            stop_on_generation_error=stop_on_generation_error,
         ),
         scorer=scicode_scorer(
             output_dir=output_dir,
